@@ -12,7 +12,153 @@
 
 <img src="https://img.shields.io/badge/-PHP-yellow?logo=PHP&logoColor=#777BB4"> <img src="https://img.shields.io/badge/-Laravel-critical?logo=LARAVEL&logoColor=white"> <img src="https://img.shields.io/badge/-Bootstrap-blueviolet?logo=Bootstrap&logoColor=white"> <img src="https://img.shields.io/badge/-jQuery-important?logo=jQuery&logoColor=white"> <img src="https://img.shields.io/badge/-JavaScript-green?logo=JavaScript&logoColor=white"> <img src="https://img.shields.io/badge/-HTML5-blue?logo=HTML5&logoColor=white"> <a href="https://developer.mozilla.org/ko/docs/Learn/Getting_started_with_the_web/CSS_basics"><img src="https://img.shields.io/badge/-CSS3-gray?logo=CSS3&logoColor=white"></a> <img src="https://img.shields.io/badge/-Python-white?logo=Python&logoColor=blue"> <img src="https://img.shields.io/badge/-Vue.js-red?logo=Vue.js">
 
+## HTML
 
+### Escape Sequence
+
+HTML 상에서는 특수문자가 제대로 나타나지 않는 경우가 있다. 그런 경우를 대비하여 이스케이프 문자를 제공한다.
+
+| 표현 문자 | 숫자 표현   | 문자 표현 | 설명          |
+| --------- | ----------- | --------- | ------------- |
+| -         | `&#00;-&#08;` | -         | 사용하지 않음 |
+| space     | `&#09;`       | -         | 수평탭        |
+| space | `&#10;` | - | 줄 삽입 |
+| - | `&#11;-&#31;` | - | 사용하지 않음 |
+| space | `&#32;` | - | 여백 |
+| ! | `&#33;` | - | 느낌표 |
+| " | `&#34;` | &quot; | 따옴표 |
+| # | `&#35;` | - | 숫자기호 |
+| $ | `&#36;` | - | 달러 |
+| % | `&#37;` | - | 백분율 기호 |
+| & | `&#38;` | &amp; | Ampersand |
+| ' | `&#39;` | - | 작은 따옴표 |
+| ( | `&#40;` | - | 왼쪽 괄호 |
+| ) | `&#41;` | - | 오른쪽 괄호 |
+| * | `&#42;` | - | 아스트릭 |
+| + | `&#43;` | - | 더하기 기호 |
+| , | `&#44;` | - | 쉼표 |
+| - | `&#45;` | - | Hyphen |
+| . | `&#46;` | - | 마침표 |
+| / | `&#47;` | - | Solidus (slash) |
+| 0 - 9 | `&#48;-&#57;` | - | 0부터 9까지 |
+| : | `&#58;` | - | 콜론 |
+| ; | `&#59;` | - | 세미콜론 |
+| < | `&#60;` | &lt; | 보다 작은 |
+| = | `&#61;` | - | 등호 |
+| > | `&#62;` | &gt; | 보다 큰 |
+| ? | `&#63;` | - | 물음표 |
+| @ | `&#64;` | - | Commercial at |
+| A - Z | `&#65;-&#90;` | - | A부터 Z까지 |
+| [ | `&#91;` | - | 왼쪽 대괄호 |
+| \ | `&#92;` | - | 역슬래쉬 |
+| ] | `&#93;` | - | 오른쪽 대괄호 |
+| ^ | `&#94;` | - | 탈자부호 |
+| _ | `&#95;` | - | 수평선 |
+| ` | `&#96;` | - | Acute accent |
+| a - z | `&#97;-&#122;` | - | a부터 z까지 |
+| { | `&#123;` | - | 왼쪽 중괄호 |
+| \| | `&#124;` | - | 수직선 |
+| } | `&#125;` | - | 오른쪽 중괄호 |
+| ~ | `&#126;` | - | 꼬리표 |
+| - | `&#127;-&#159;` | - | 사용하지 않음 |
+|  | `&#160;` | &nbsp; | Non-breaking space |
+| ¡ | `&#161;` | &iexcl; | 거꾸로된 느낌표 |
+| ￠ | `&#162;` | &cent; | 센트 기호 |
+| ￡ | `&#163;` | &pound; | 파운드 |
+| ¤ | `&#164;` | &curren; | 현재 환율 |
+| ￥ | `&#165;` | &yen; | 엔 |
+| \| | `&#166;` | &brvbar; | 끊어진 수직선 |
+| § | `&#167;` | &sect; | 섹션 기호 |
+| ¨ | `&#168;` | &uml; | 움라우트 |
+| ⓒ | `&#169;` | &copy; | 저작권 |
+| ª | `&#170;` | &ordf; | Feminine ordinal |
+| ≪ | `&#171;` | &laquo; | 왼쪽 꺾인 괄호 |
+| ￢ | `&#172;` | &not; | 부정 |
+| ­ | `&#173;` | &shy; | Soft hyphen |
+| ? | `&#174;` | &reg; | 등록상표 |
+| &hibar; | `&#175;` | &macr; | Macron accent |
+| ° | `&#176;` | &deg; | Degree sign |
+| ± | `&#177;` | &plusmn; | Plus or minus |
+| ² | `&#178;` | &sup2; | Superscript two |
+| ³ | `&#179;` | &sup3; | Superscript three |
+| ´ | `&#180;` | &acute; | Acute accent |
+| μ | `&#181;` | &micro; | Micro sign (Mu) |
+| ¶ | `&#182;` | &para; | 문단기호 |
+| · | `&#183;` | &middot; | Middle dot |
+| ¸ | `&#184;` | &cedil; | Cedilla |
+| ¹ | `&#185;` | &sup1; | Superscript one |
+| º | `&#186;` | &ordm; | Masculine ordinal |
+| ≫ | `&#187;` | &raquo; | 오른쪽 꺾인 괄호 |
+| ¼ | `&#188;` | &frac14; | 4분의 1 |
+| ½ | `&#189;` | &frac12; | 2분의 1 |
+| ¾ | `&#190;` | &frac34; | 4분의 3 |
+| ¿ | `&#191;` | &iquest; | 거꾸로된 물음표 |
+| A | `&#192;` | &Agrave; | Capital A, grave accent |
+| A | `&#193;` | &Aacute; | Capital A, acute accent |
+| A | `&#194;` | &Acirc; | Capital A, circumflex accent |
+| A | `&#195;` | &Atilde; | Capital A, tilde |
+| A | `&#196;` | &Auml; | Capital A, dieresis or umlaut mark |
+| A | `&#197;` | &Aring; | Capital A, ring (Angstrom) |
+| Æ | `&#198;` | &AElig; | Capital AE diphthong (ligature) |
+| C | `&#199;` | &Ccedil; | Capital C, cedilla |
+| E | `&#200;` | &Egrave; | Capital E, grave accent |
+| E | `&#201;` | &Eacute; | Capital E, acute accent |
+| E | `&#202;` | &Ecirc; | Capital E, circumflex accent |
+| E | `&#203;` | &Euml; | Capital E, dieresis or umlaut mark |
+| I | `&#204;` | &Igrave; | Capital I, grave accent |
+| I | `&#205;` | &Iacute; | Capital I, acute accent |
+| I | `&#206;` | &Icirc; | Capital I, circumflex accent |
+| I | `&#207;` | &Iuml; | Capital I, dieresis or umlaut mark |
+| Ð | `&#208;` | &ETH; | Capital Eth, Icelandic |
+| N | `&#209;` | &Ntilde; | Capital N, tilde |
+| O | `&#210;` | &Ograve; | Capital O, grave accent |
+| O | `&#211;` | &Oacute; | Capital O, acute accent |
+| O | `&#212;` | &Ocirc; | Capital O, circumflex accent |
+| O | `&#213;` | &Otilde; | Capital O, tilde |
+| O | `&#214;` | &Ouml; | Capital O, dieresis or umlaut mark |
+| × | `&#215;` | &times; | Multiply sign |
+| Ø | `&#216;` | &Oslash; | width="130"Capital O, slash |
+| U | `&#217;` | &Ugrave; | Capital U, grave accent |
+| U | `&#218;` | &Uacute; | Capital U, acute accent |
+| U | `&#219;` | &Ucirc; | Capital U, circumflex accent |
+| U | `&#220;` | &Uuml; | Capital U, dieresis or umlaut mark |
+| Y | `&#221;` | &Yacute; | Capital Y, acute accent |
+| Þ | `&#222;` | &THORN; | Capital Thorn, Icelandic |
+| ß | `&#223;` | &szlig; | Small sharp s, German (sz ligature) |
+| a | `&#224;` | &agrave; | Small a, grave accent |
+| a | `&#225;` | &aacute; | Small a, acute accent |
+| a | `&#226;` | &acirc; | Small a, circumflex accent |
+| a | `&#227;` | &atilde; | Small a, tilde |
+| a | `&#228;` | &auml; | Small a, dieresis or umlaut mark |
+| a | `&#229;` | &aring; | Small a, ring |
+| æ | `&#230;` | &aelig; | Small ae diphthong (ligature) |
+| c | `&#231;` | &ccedil; | Small c, cedilla |
+| e | `&#232;` | &egrave; | Small e, grave accent |
+| e | `&#233;` | &eacute; | Small e, acute accent |
+| e | `&#234;` | &ecirc; | Small e, circumflex accent |
+| e | `&#235;` | &euml; | Small e, dieresis or umlaut mark |
+| i | `&#236;` | &igrave; | Small i, grave accent |
+| i | `&#237;` | &iacute; | Small i, acute accent |
+| i | `&#238;` | &icirc; | Small i, circumflex accent |
+| i | `&#239;` | &iuml; | Small i, dieresis or umlaut mark |
+| ð | `&#240;` | &eth; | Small eth, Icelandic |
+| n | `&#241;` | &ntilde; | Small n, tilde |
+| o | `&#242;` | &ograve; | Small o, grave accent |
+| o | `&#243;` | &oacute; | Small o, acute accent |
+| o | `&#244;` | &ocirc; | Small o, circumflex accent |
+| o | `&#245;` | &otilde; | Small o, tilde |
+| o | `&#246;` | &ouml; | Small o, dieresis or umlaut mark |
+| ÷ | `&#247;` | &divide; | Division sign |
+| ø | `&#248;` | &oslash; | Small o, slash |
+| u | `&#249;` | &ugrave; | Small u, grave accent |
+| u | `&#250;` | &uacute; | Small u, acute accent |
+| u | `&#251;` | &ucirc; | Small u, circumflex accent |
+| u | `&#252;` | &uuml; | Small u, dieresis or umlaut mark |
+| y | `&#253;` | &yacute; | Small y, acute accent |
+| þ | `&#254;` | &thorn; | Small thorn, Icelandic |
+| y | `&#255;` | &yuml; | Small y, dieresis or umlaut mark |
+
+참고 : https://mateam.net/html-escape-characters/
 
 ## CSS
 
@@ -205,6 +351,24 @@ div.style.z-index = 2;
 div.dataset.index  // data-index 반환
 div.style.zIndex = 99;
 ```
+
+### Escape sequences
+
+| Escape sequence                                              | Unicode code point                                           |
+| ------------------------------------------------------------ | ------------------------------------------------------------ |
+| `\0`                                                         | null character (U+0000 NULL)                                 |
+| `\'`                                                         | single quote (U+0027 APOSTROPHE)                             |
+| `\"`                                                         | double quote (U+0022 QUOTATION MARK)                         |
+| `\\`                                                         | backslash (U+005C REVERSE SOLIDUS)                           |
+| `\n`                                                         | newline (U+000A LINE FEED; LF)                               |
+| `\r`                                                         | carriage return (U+000D CARRIAGE RETURN; CR)                 |
+| `\v`                                                         | vertical tab (U+000B LINE TABULATION)                        |
+| `\t`                                                         | tab (U+0009 CHARACTER TABULATION)                            |
+| `\b`                                                         | backspace (U+0008 BACKSPACE)                                 |
+| `\f`                                                         | form feed (U+000C FORM FEED)                                 |
+| `\uXXXX` …where `XXXX` is exactly 4 hex digits in the range `0000`–`FFFF`; e.g., `\u000A` is the same as `\n` (LINE FEED); `\u0021` is "`!`" | Unicode code point between `U+0000` and `U+FFFF` (the Unicode Basic Multilingual Plane) |
+| `\u{X}`…`\u{XXXXXX}` …where `X`…`XXXXXX` is 1–6 hex digits in the range `0`–`10FFFF`; e.g., `\u{A}` is the same as `\n` (LINE FEED); `\u{21}` is "`!`" | Unicode code point between `U+0000` and `U+10FFFF` (the entirety of Unicode) |
+| `\xXX` …where `XX` is exactly 2 hex digits in the range `00`–`FF`; e.g., `\x0A` is the same as `\n` (LINE FEED); `\x21` is "`!`" | Unicode code point between `U+0000` and `U+00FF` (the Basic Latin and Latin-1 Supplement blocks; equivalent to ISO-8859-1) |
 
 
 
@@ -467,7 +631,7 @@ div.style.zIndex = 99;
 
 ## Git
 
-### Sementic Commit Messages
+### Semantic Commit Messages
 
 - `feat`: (new feature for the user, not a new feature for build script)
   - `example`: [feat] ISSUE-001: add slider
@@ -488,7 +652,7 @@ div.style.zIndex = 99;
 <template>
 	<keep-alive>
     <!-- 선택 컴포넌트 바인딩 -->
-  	<component :something="something" /></Components>
+  	<component :something="something" /></component>
   </keep-alive>
 </template>
 ```
@@ -496,6 +660,89 @@ div.style.zIndex = 99;
 This is the general documentation for vue 3 slots: [vuejs.org/guide/components/slots.html](https://vuejs.org/guide/components/slots.html) and the render function documentation contains a bit about using slots as well [vuejs.org/guide/extras/render-function.html#rendering-slots](https://vuejs.org/guide/extras/render-function.html#rendering-slots) 
 
 
+
+## 용어 정리
+
+### JavaScript / Vue
+
+- 논리(Logic) : 하나의 논리, 혹은 기능을 구성하는 단위로 보통 하나의 기능을 수행하는 함수를 지칭하는 경우가 많다.(func calculator() === Logic)
+  ```javascript
+  // 하나의 logic
+  function calculator(num1: number | string, num2: number | string): void { ... }
+  ```
+
+  
+
+- 매개변수(Parameter): 함수가 실행 시 전달받는 변수들이다.
+  ```javascript
+  function calculator(num1: number | string, num2): void { ... } // num1, num2 === Parameters
+  ```
+
+  
+
+- 인자, 인수(Arguments): 함수 실행문에서 전달하는 매개변수.
+  ```javascript
+  calculator(1, 2) // 1, 2 === Arguments
+  ```
+
+- 컴포넌트(Component):  Vue Class로 생상된 하나의 Vue 객체 / createApp, app.component 등도 마찬가지로 컴포넌트를 생성한다.
+  ```javascript
+  new Vue({
+    ...
+  })
+  ```
+
+- 인스턴스(Instance): 보통 정의된 Class를 new로 생성한 것을 인스턴스라 하는데, 따라서 위처럼 생성된 Vue Component를 컴포넌트 인스턴스라고 부르기도 한다. 전역 / 지역에 따로 등록하여 사용도 가능하다.
+
+  > vuejs.org의 Component Registration 참조
+
+  ```javascript
+  // 전역(global) 예시. main.js
+  import { createApp } from 'vue'
+  import App from './App.vue' // component instance
+  createApp(App).mount('#app')
+  ```
+
+  ```javascript
+  // 지역(local) 예시
+  import { MyComponent } from 'COMPONENT_PATH/MyComponent.vue'
+  export default {
+    components: { MyComponent }
+  }
+  ```
+
+- 구조 분해(Destructuring): 자바스크립트와 밀접한 개념으로,
+  ```javascript
+  // Obj 구조 분해 할당
+  const x = {
+    lastName: 'kim',
+    firstName: 'amoogae'
+  }
+  
+  let { lastName, firstName } = x
+  ```
+
+  ```vue
+  <!-- vue 내부에선 directive 등에 사용이 가능하다. -->
+  <Component v-slot:default="{ lastName, firstName }"></Component>
+  ```
+
+- 함수(Function)과 메서드(Methods): 메서드는 호출할 때 앞에 마침표(.)가 붙는다. 메서드는 클래스, 혹은 객체에 속해 있는 함수로 독립적이지 못하고 해당 객체/클래스에 종속적이다.
+  ```javascript
+  let foo = {
+    getName: function (n) {
+      const name = n ? n : 'kim';
+      return name;
+    }
+  }
+  foo.getName() // methods
+  
+  function bar() {
+    
+  }
+  ```
+
+  
 
 ## 추천사이트
 
