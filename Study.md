@@ -747,3 +747,7 @@ This is the general documentation for vue 3 slots: [vuejs.org/guide/components/s
 ## 추천사이트
 
 https://learn.shayhowe.com/html-css/
+
+VSCode 기본 설정
+
+https://gwonsungjun.github.io/articles/2018-06/vscodeSetting
