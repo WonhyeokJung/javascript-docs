@@ -397,7 +397,7 @@ div.style.zIndex = 99;
   // window.foo();
   ```
 
-- 메서드 호출시(객체의 프로퍼티로 호출), this는 객체를 가리킨다.
+- 메서드 호출시(객체의 프로퍼티로 호출), this는 객체를 가리킨다.(객체의 속성처럼 .있을 시, . 앞의 것)
 
   ```javascript
   var foo = function () {
@@ -477,7 +477,7 @@ div.style.zIndex = 99;
   }
   obj.foo();
   
-  // 3. 화살표 함수 이용
+  // 3. 화살표 함수 이용(상위 스코프의 this를 참조한다.)
   var obj = {
       name: 'jane doe',
       foo: () => {
@@ -511,7 +511,7 @@ div.style.zIndex = 99;
   var bar = foo.bind(obj);
   bar(); // obj
   var bar2 = bar.bind(obj2);
-  bar2(); // obj, 한번만 적용되므로 obj2는 무시됨.
+  bar2(); // obj, 한번만 적용되므로 obj2는 무시됨. 즉, 이중 바인드는 불가능하다.
   ```
   
 - ES6에 새로 추가된 화살표 함수는 **자신을 포함하고 있는 외부 Scope**에서 This를 계승받는다.
@@ -556,7 +556,8 @@ div.style.zIndex = 99;
   ```
 
 - Strict Mode(엄격모드)에서는 호출한 객체가 없을 경우, this를 window가 아닌 **undefined**로 간주한다.
-
+  Class와 Strict Mode에서는 자동으로 적용됨에 유의한다.
+  
   ```javascript
   'use strict';
   function printThis() {
@@ -564,7 +565,7 @@ div.style.zIndex = 99;
   }
   printThis();  // ~~~window~~~, undefined
   ```
-
+  
   
 
 ## PHP, Laravel & blade
