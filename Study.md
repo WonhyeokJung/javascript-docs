@@ -319,8 +319,21 @@ function prev() {
    - UpperCamelCase
 4. Method names
    - lowerCamelCase
-5. Enum names
-   - UpperCamelCase
+5. Enum names(상수값의 열거형)
+   - UpperCamelCase(===PascalCase)
+   
+   - ```javascript
+     const Season = {
+       SPRING: 'spring',
+       SUMMER: 'summer',
+       AUTUMN: 'autumn',
+       WINTER: 'winter'
+     }
+     
+     Object.freeze(Season)  // 변경 방지
+     ```
+   
+   - 
 6. Constant names
    - CONSTANT_NAME ( all uppercase letters with words separated by underscores)
 7. Non-constant field names(static or otherwise)
@@ -566,7 +579,21 @@ div.style.zIndex = 99;
   printThis();  // ~~~window~~~, undefined
   ```
   
-  
+
+### Shorthand Properties
+
+단축(축약) 속성명은 객체의 Key와 Value가 같을 떄 사용할 수 있다.
+
+```javascript
+let a = "foo"
+let obj = {
+  a: a
+}
+// Shorthand Properties
+let obj = { a }
+```
+
+
 
 ## PHP, Laravel & blade
 
@@ -743,7 +770,14 @@ This is the general documentation for vue 3 slots: [vuejs.org/guide/components/s
   }
   ```
 
-  
+
+## VSCODE
+
+- 같은 줄 내 같은 단어 선택 : `CTRL + D`
+- 페이지 내 전체 같은 단어 선택: `CTRL + SHIFT + L`
+- 설정 관련 주소창 `F1` 혹은 `CTRL + SHIFT + P`
+
+
 
 ## 추천사이트
 
