@@ -12,6 +12,14 @@
 
 <img src="https://img.shields.io/badge/-PHP-yellow?logo=PHP&logoColor=#777BB4"> <img src="https://img.shields.io/badge/-Laravel-critical?logo=LARAVEL&logoColor=white"> <img src="https://img.shields.io/badge/-Bootstrap-blueviolet?logo=Bootstrap&logoColor=white"> <img src="https://img.shields.io/badge/-jQuery-important?logo=jQuery&logoColor=white"> <img src="https://img.shields.io/badge/-JavaScript-green?logo=JavaScript&logoColor=white"> <img src="https://img.shields.io/badge/-HTML5-blue?logo=HTML5&logoColor=white"> <a href="https://developer.mozilla.org/ko/docs/Learn/Getting_started_with_the_web/CSS_basics"><img src="https://img.shields.io/badge/-CSS3-gray?logo=CSS3&logoColor=white"></a> <img src="https://img.shields.io/badge/-Python-white?logo=Python&logoColor=blue"> <img src="https://img.shields.io/badge/-Vue.js-red?logo=Vue.js">
 
+## Markdown
+
+### Style Guide
+
+>  https://arcticicestudio.github.io/styleguide-markdown/rules/
+
+1. File Naming: kebab-case
+
 ## HTML
 
 ### Escape Sequence
@@ -308,6 +316,8 @@ function prev() {
 ## JavaScript
 
 ### Style Guide
+
+> https://github.com/arcticicestudio/styleguide-javascript
 
 #### Rules by identifier type
 
@@ -686,8 +696,6 @@ let obj = { a }
 ```
 
 This is the general documentation for vue 3 slots: [vuejs.org/guide/components/slots.html](https://vuejs.org/guide/components/slots.html) and the render function documentation contains a bit about using slots as well [vuejs.org/guide/extras/render-function.html#rendering-slots](https://vuejs.org/guide/extras/render-function.html#rendering-slots) 
-
-
 
 ## 용어 정리
 
