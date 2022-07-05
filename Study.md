@@ -299,8 +299,6 @@ Selector {Declaration (property: property-value);} <- Declaration block
    }
    ```
 
-   
-
 3. Mozilla 제안 순서
    ```markdown
    1. display
