@@ -236,10 +236,72 @@ Selector {Declaration (property: property-value);} <- Declaration block
 
    
 
-#### CSS Property 기술 추천 순서
+#### CSS Property 기술 추천 순서(Properties Order Convention)
 
-1. Mozilla 제안 순서
 
+
+1. 기본 가이드
+   1. **Layout Properties** (position, float, clear, display, box-sizing)
+   2. **Box Model Properties** (width, height, margin, padding,)
+   3. **Visual Properties** (color, background, border, box-shadow, box-color)
+   4. **Typography Properties** (font-size, font-family, text-align, text-transform)
+   5. **Misc Properties** (cursor, overflow, z-index)
+
+2. 예제
+   ```css
+   el {
+     display: ;
+     list-style: ;
+     float: ;
+     position: ;
+     clear: ;
+     box-sizing: ;
+     
+     width: ;
+     min-width: ;
+     max-width: ;
+     height: ;
+     
+     margin: ;
+     margin-top: ;
+     margin-right: ;
+     margin-bottom: ;
+     margin-left: ;
+     
+     padding: ;
+     
+     border: ;
+     border-radius: ;
+     box-color: ;
+     box-shadow: ;
+     background: ;
+     
+     color: ;
+     font: ;
+     font-family: ;
+     font-size: ;
+     line-height: ;
+     font-weight: ;
+     text-indent: ;
+     text-transform: ;
+     text-decoration: ;
+     letter-spacing: ;
+     word-spacing: ;
+     white-space: ;
+     text-align: ;
+     vertical-align: ;
+     
+     overflow: ;
+     cursor: ;
+     z-index: ;
+     transition: ;
+     animation: ;
+   }
+   ```
+
+   
+
+3. Mozilla 제안 순서
    ```markdown
    1. display
    2. list-style
@@ -257,8 +319,7 @@ Selector {Declaration (property: property-value);} <- Declaration block
    14. content
    ```
 
-2. Naver
-
+4. Naver
    ```markdown
    1. display
    2. overflow
@@ -271,9 +332,6 @@ Selector {Declaration (property: property-value);} <- Declaration block
    9. color/font
    10. animation
    ```
-
-
-
 #### 기타 참고 사항
 
 ##### Transition 성능 향상
