@@ -367,6 +367,16 @@ function prev() {
   }
 ```
 
+### 가운데 정중앙 정렬
+
+```css
+div {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+```
+
 
 
 ## JavaScript
