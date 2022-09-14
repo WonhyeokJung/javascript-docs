@@ -666,70 +666,99 @@ let obj = {
   a: a
 }
 // Shorthand Properties
-let obj = { a }
+let obj = { a } // { a: a }와 동일
 ```
 
 
 
-## PHP, Laravel & blade
+### Hoisting
 
-### 문법
+> 자바스크립트의 모든 선언문에서는 호이스팅이 발생한다. 호이스팅은 변수 혹은 함수를 선언하기 전에 호출하는 경우 마치 코드의 선두로 끌어진 것처럼 실행되는 자바스크립트의 특징이다.
 
-| 코드                                       | 상세내용                                                     |  Vue   |
-| :----------------------------------------- | :----------------------------------------------------------- | :----: |
-| @if  @elseif @endif                        | if문                                                         |        |
-| @foreach                                   | for문                                                        |        |
-| @forelse @empty @endforelse                | @if와 @foreach의 결합문                                      |        |
-| @include & @require('.blade.php의 파일명') | 코드를 불러와 적용시킨다.<br />include는 Error가 발생해도 코드를 실행하지만, require은 Fatal error를 일으켜 코드를 실행하지 않는다. |        |
-| @extends                                   | 상속 / 상속한 위치에서 상속한 컴포넌트를 전체 출력한다.      | Props? |
-| @section @endsection                       | 섹션 생성. @yield와 같이 쓰여 섹션 내용을 출력한다.          | $emit  |
-| @yield                                     | 섹션을 출력할 때 사용하며, 보통 하위 컴포넌트에서 @section을 선언하고 @extends되는 상위 컴포넌트에 @yield를 사용하여 자식 컴포넌트를 부모 컴포넌트에 적용한다. | $emit  |
-| @show                                      | section을 자식에게 상속하고 싶을 때 사용(@section @show) / 자식은 @parent 키워드로 불러온다. |        |
-| @stack<br />@push                          | 별도의 css나 script 혹은 컨텐츠를 추가할 때 사용한다.<br />@push @endpush 내에 정의된 것을 불러오며, Section과 다른 점은 **하나의 뷰에 여러번 호출이 가능하다 **는 점이다. |        |
+- 원인
+  자바스크립트는 **런타임 실행 환경 이전에 모든 변수/함수 선언문을(var, let, const, function, function*, class) 먼저 실행**하기 때문에 호이스팅이 발생한다.
 
-#### Route / Controller / View
+**Variable Hoisting**
 
-1. Route
-   - Define URL & connect Controller and View
-   - `Route::<HTTP Methods>('/subpath/{Variable routing}', 'Closure Function/Controller@specific method') -> name('naming')`
-2. Controller
-   - Get data from Database & send to Template
-   - Route list : `php artisan route:list`
-   - 
+- var
 
-#### compact()
+  > var는 몇가지 문제점을 가지고 있어 기본적으로 사용하지 않는 것을 전제로 하지만, 어떤 문제점을 갖고 있는 지 살펴보도록 하자.
 
-- 개별 변수들을 가지고 하나의 배열을 생성하는 PHP 함수
+  1. 호이스팅의 발생
+     var에서 발생하는 호이스팅은 자동으로 **undefined**를 할당하여 디버깅을 어렵게 한다.
 
-  ```php
-  $city  = 'San Francisco';
-  $state = 'CA';
-  $event = 'SIGGRAPH';
-  
-  $location_vars = ['city', 'state'];
-  
-  $result = compact('event', $location_vars);
-  print_r($result);
-  /*
-  	Array
-  	(
-  		[event] => SIGGRAPH
-  		[city] => San Francisco
-  		[state] => CA
-  	)
-  */
-  ```
+     ```javascript
+     console.log(foo);  // undefined. 호이스팅 중 변수에 undefined를 할당한다.
+     
+     var foo = 30;
+     console.log(foo);  // 30
+     ```
 
-  
+  2. 변수의 중복 선언 허용 및 함수 레벨 스코프
+     var로 선언한 변수는 함수의 코드 블록만을 지역 스코프로 인정하는 함수 레벨 스코프(Function level scope, Function scope)를 따라, 예상치 못한 값 변경의 위험성이 높다.
 
-## jQuery
+     ```javascript
+     console.log(x); // undefined
+     var x = 10; // 선언과 초기화를 동시에 해서 값을 할당하였다고 해도, 선언문과 할당문을 2개의 문으로 구분해서 실행하기 때문에 선언문 전엔 undefined가 할당되어 있다.
+     if (true) {
+       var x = 20; // 중복선언
+     }
+     console.log(x); // 20
+     ```
 
-- stop()의 사용 이유
-  - 이벤트 버블링 방지 위함.
-  - 애니메이션 등의 동작을 중지시킴.
-  - 하나의 로직 내에서 두 번의 Stop이 실행되면 다른 animation을 중지시킬 수 있는 위험성이 있음.
+- let
 
+  > ES6에서 도입된 let은 블록 레벨 스코프(Block level scope, Block scope)를 따르며, 호이스팅이 발생하지 않는 것처럼 동작한다.
 
+  1. 호이스팅의 발생
+     let에서도 호이스팅은 발생하지만, 호이스팅이 발생하지 않는 것처럼 동작한다. 이는 let은 **선언 단계와 초기화 단계가 나뉘어** 동작하기 때문이다.
+
+     ```javascript
+     console.log(foo); // ReferenceError: foo is not defined. 일시적 사각 지대(TDZ)에 있다.
+     
+     let foo; // 변수 선언문에 도달했을 때 initialization을 시작한다. foo = undefined;
+     console.log(foo); // undefined
+     foo = 21; // assignment. 재할당(reassignment)도 가능하다.
+     console.log(foo); // 21
+     ```
+
+     let의 호이스팅은 `선언 단계 [일시적 사각 지대(TDZ, Temporal Dead Zone)] 초기화 단계 - 할당 단계`로 이루어져 있는데, 변수가 선언된 코드 줄에 도달했을 때 초기화를 실행하고 그 전에는 변수를 끌어올려 선언만 해두기 때문에, 선언문에 도달할 때까지 코드를 참조할 수 없는 일시적 사각 지대가 생긴다. 즉, 코드 선언문에 도달하기까지는 코드를 불러올 수 없기 때문에 코드의 안정성이 향상된다.
+
+     **호이스팅 미발생의 증명**
+
+     ```javascript
+     let foo = 1; // 전역변수
+     {
+     	console.log(foo); // ReferenceError : Cannot access 'foo' before initialization
+       let foo = 2; // 지역변수
+     }
+     ```
+
+     만약 호이스팅이 발생하지 않았다면, `console.log(foo)`는 당연히 전역변수인 foo의 값 1을 불러왔어야 했지만, 참조에러를 발생시키고 있다. 이는 지역변수의 foo에서 호이스팅이 발생했음을 증명한다.
+
+  2. 변수 중복 선언 금지
+     변수의 중복 선언은 `SyntaxError`를 발생시킨다.
+
+     ```javascript
+     let a = 123;
+     // 같은 스코프 내에서 중복 선언을 허용하지 않는다.
+     let a = 456; // SyntaxError: Identifier 'a' has already been declared;
+     ```
+
+  3. 블록 레벨 스코프
+     오직 함수 블록만 지역 스코프(local scope)로 인정했던 var와 달리 let으로 선언한 변수는 모든 코드 블록(함수, 조건문, 반복문, try/catch문 등)을 지역 스코프로 인정하는 블록 레벨 스코프(Block level scope, Block scope)를 따른다.
+
+     ```javascript
+     let foo = 1; // 전역 변수
+     {
+       let foo = 2; // 지역 변수
+       let bar = 3; // 지역 변수
+     }
+     console.log(foo); // 1
+     console.log(bar); // referenceError: bar is not defined
+     ```
+
+     
 
 
 
@@ -746,10 +775,31 @@ let obj = { a }
 - `test`: (adding missing tests, refactoring tests; no production code change)
 - `chore`: (updating grunt tasks etc; no production code change)
 
+### Git Add를 취소할 때
+
+`git reset HEAD`
+
+### Git 초기 생성시 파일을 추가하여(LICENSE, README 등) 에러가 났을 때 대처 방법
+
+```bash
+git pull <remote_name> <branch_name> --allow-unrelated-histories
+```
+
+- 초기 파일들과 새로 올릴 파일들을 서로 다른 프로젝트로 구분하기 때문에(처음에 pull한 저장소 파일에 코드를 작성하지 않았다면), 병합이 불가능하도록 설정되어 있어 이를 허용해주어야 한다.
+
 ### Style Guide
 
 1. Repo Name
    kebab-case
+
+## NPM
+
+- 개발자용 Package 설치
+  ```bash
+  npm i -D 'PACKAGE_NAME'
+  ```
+
+  
 
 ## Vue
 
