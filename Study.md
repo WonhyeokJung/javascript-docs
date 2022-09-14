@@ -669,7 +669,128 @@ let obj = {
 let obj = { a } // { a: a }와 동일
 ```
 
+### Function & Method
 
+#### 함수 구성
+
+자바스크립트의 함수는 객체 타입의 값이다. 따라서 함수 리터럴로 생성할 수 있다.
+
+```javascript
+// 함수 리터럴
+function () { ... }
+// 풀어쓰면...
+function FUNCTION_NAME(parameter1, parameter2...) {
+  return;
+}
+```
+
+함수명(fucntion name)은 생략할 수 있다. 이름이 있는 함수의 경우 기명함수(named function), 이름이 없는 함수의 경우 무명/익명 함수(anonymous function)이라고 한다.
+
+기명 함수의 경우, **함수 내부에서만 참조가 가능**한 식별자이다.
+
+```javascript
+// named function
+function add(x, y) {
+  return x + y;
+}
+
+// anonymous function
+function (x, y) {
+  return x + y;
+}
+
+// 함수 내부에서만 참조 가능
+(function bar() { console.log('bar') });
+bar(); // ReferenceError: bar is not defined
+```
+
+### 함수 정의
+
+1. 함수 선언문(function declaration)
+   ```javascript
+   function add(x, y) {
+     return x + y;
+   }
+   ```
+
+   함수 선언식은 함수명을 이용해 암묵적으로 식별자를 생성한다. 그래서 식별자의 선언 없이도 함수의 참조, 호출이 가능하다.
+
+   ```javascript
+   // 암묵적인 식별자 생성
+   var add = function add(x, y) {
+     return x + y;
+   }
+   ```
+
+   함수 선언식에서는 **함수 호이스팅(function hoisting)**이 발생한다.
+
+   ```javascript
+   add(2, 5); // 7
+   function add(x, y) {
+     return x + y;
+   }
+   ```
+
+2. 함수 표현식(function expression)
+   함수는 일급객체이므로 함수 리터럴로 생성한 함수 객체를 변수에 할당할 수 있다.
+
+   ```javascript
+   // 함수 표현식에선 함수 이름을 생략하는 것이 일반적이다.
+   const add = function (x, y) {
+     return x + y;
+   }
+   ```
+
+   함수선언문과 다르게 변수 호이스팅이 일어나므로, 함수 선언 이전에 함수를 사용하는 것은 불가능하다.
+
+3. Function 생성자 함수(Function constructor function)
+   빌트인 함수인 Function 생성자 함수를 이용하여 함수 객체를 선언하는 방식이다.
+
+   ```javascript
+   let add = new Function('x', 'y', 'return x + y;');
+   console.log(add(2, 5)); // 7
+   ```
+
+   **클로저**를 생성하지 않아 보통 사용하지 않는다.
+
+   ```javascript
+   let add1 = (function() {
+     var a = 10;
+     return function (x, y) {
+       return x + y + a;
+     }
+   }());
+   console.log(add1(1, 2)) // 13;
+   
+   let add2 = (function () {
+     var a = 10;
+     return new Function('x', 'y', 'return x + y + a;');
+   }());
+   
+   console.log(add2(1, 2)) // ReferenceError: a is not defined;
+   ```
+
+4. 화살표 함수(arrow function)
+
+   ES6에서 도입되었으며, 화살표를 활용하여 간단하게 함수를 정의할 수 있다.
+
+   ```javascript
+   const add = (x, y) => x + y;
+   add(2, 5); // 7
+   ```
+
+   화살표 함수는 생성자 함수로 사용할 수 없으며, 별도의 this를 갖지 않아 **자신의 상위 스코프**의 this를 this로 참조한다. 더불어, prototype 프로퍼티가 없으며 arguments 객체를 생성하지 않는다.
+
+   ```javascript
+   const Foo = () => {};
+   new Foo(); // TypeError: Foo is not a constructor
+   Foo.hasOwnProperty('prototype') // false
+   
+   ```
+
+   
+
+#### 메서드(method)
 
 ### Hoisting
 
