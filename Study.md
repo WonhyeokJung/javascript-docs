@@ -879,7 +879,43 @@ bar(); // ReferenceError: bar is not defined
      console.log(bar); // referenceError: bar is not defined
      ```
 
-     
+
+
+
+### export의 두가지 방식
+
+1. `export default` 방식
+
+   ```javascript
+   // 함수, 클래스
+   export default function foo() {}
+   export default class bar() {}
+   
+   // 변수
+   const abc = 'something';
+   export default abc;
+   
+   // 불러오기
+   import foo from 'SOMEWHERE';
+   import bar from 'SOMEWHERE';
+   import abc from 'SOMEWHERE';
+   ```
+
+2. export 방식
+   ```javascript
+   export const abc = {};
+   // 동시 export
+   const foo = {};
+   const bar = function () {}
+   export { foo, bar }
+   
+   // import
+   import { abc, foo, bar } from 'SOMEWHERE';
+   ```
+
+   
+
+
 
 
 
