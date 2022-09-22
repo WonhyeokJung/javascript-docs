@@ -913,7 +913,12 @@ bar(); // ReferenceError: bar is not defined
    import { abc, foo, bar } from 'SOMEWHERE';
    ```
 
-   
+
+### SSR - Cookie와 CSR - localStorage
+
+서버사이드 렌더링의 경우 localStorage를 활용할 수 없다. localStorage는 browser에만 있기 때문. 따라서 cookie를 사용하는 편이 좋다.
+
+
 
 
 
