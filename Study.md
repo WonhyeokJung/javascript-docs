@@ -170,6 +170,78 @@ HTML 상에서는 특수문자가 제대로 나타나지 않는 경우가 있다
 
 ## CSS
 
+### Safari
+
+애플의 웹 브라우저 사파리는 대단한 완성도를 자랑하는데 덕분에 크롬에서는 잘 실행되는 여러 css가 사파리에선 제대로 적용되지 않는 경우가 매우 자주 생긴다. 그를 대비해서 사파리에서만 일어나는 온갖 버그를 이곳에 정리한다.
+
+가장 좋은 해결책은 크롬을 쓰게 유도하는 것이고 사파리는 폐기해버리는 것임을 항상 유의하자.
+
+#### will-change와 filter: drop-shadow()
+
+폰트어썸의 아이콘을 이용할 경우 기존에는 아래와 같은 방법으로 아이콘 뒤에 그림자를 줄 수 있었다.
+
+```css
+.fas-bookmark {
+  color: orange;
+  text-shadow: rgb(241, 157, 199) 1px 0 10px;
+}
+```
+
+하지만 Vue3 / Nuxt3를 활용하거나, 최신 폰트어썸을 활용하면 `text-shadow`를 인식하지 않아 아래와 같은 방식으로 다르게 작성해야 한다.
+
+```css
+.fa-heart:hover {
+  -webkit-filter: drop-shadow(rgb(209, 48, 48) 0px 0 0.5rem);
+  	filter: drop-shadow(rgb(209, 48, 48) 0px 0 0.5rem);
+}
+```
+
+위와 같은 경우엔 문제가 발생하지 않지만, 화면이 렌더링 된 후 코드에 의해 화면의 크기가 변경되는 경우 사파리에선 하나의 문제가 발생한다.
+
+다음과 같은 코드를 작성했다고 가정하자.
+
+```css
+  .fa-heart:hover {
+    color: rgba(237, 119, 102, 1);
+    -webkit-filter: drop-shadow(rgb(209, 48, 48) 0px 0 0.5rem);
+      filter: drop-shadow(rgb(209,48,48) 0px 0 0.5rem);
+    -webkit-transform: scale(1.125, 1.125);
+      transform: scale(1.125, 1.125);
+    -webkit-transition: -webkit-transfrom .5s;
+      transition: transform .5s;
+  }
+```
+
+사파리에서 실행하면 어떻게 될까?
+
+<img src="./assets/css-safari-will-change1.png" alt="css-safari-will-change1" style="zoom: 67%;" />
+
+이처럼 `drop-shadow`에서 리사이징이 일어나 모자이크처럼 네모난 테두리가 생기며 쉐도우가 짤리게 된다.
+
+이런 경우 활용할 수 있는 것이 `will-change` Property이다. `will-change`프로퍼티는 브라우저에게 어떤 요소(element)를 변경할 지 힌트를 주는 역할을 하는데,
+
+```css
+.fa-heart:hover {
+  /* ... */
+  will-change:filter;
+}
+```
+
+위처럼 `filter`에서 사이즈 변경을 하도록 지정해주면 사파리에서도 위와 같은 문제 없이 잘 사용할 수 있다.
+
+다만 `filter`는 치명적인 단점이 있는데 성능을 크게 저하시킬 수 있다는 문제점이 있다는 것이다. 따라서 많은 곳에 남발하는 것은 금물이고, 더이상 필요없는 경우 JavaScript 등을 이용하여 제거해 주는 것이 좋다.
+
+```javascript
+document.querySeletor('.fa-heart').style.willChange = 'auto';
+function removeHint() {
+  this.style.willChange = 'auto';
+}
+```
+
+항상 정답은 사파리 사용을 막고 크롬을 사용하게 하는 것임을 명심하자.
+
+
+
 ### Selector
 
 #### 선택자란?
@@ -377,7 +449,122 @@ div {
 }
 ```
 
+### @media query의 선언 방법
 
+미디어 쿼리는 디바이스 / 화면 크기 등에 따라 여러 가지 옵션을 줄 수 있는 등 CSS에서 자주 사용하는 요소이나 CSS에서 적용 순서 등에 민감하게 반응하여 제대로 적용되지 않는 경우가 잦다. 그를 대비해서 적용 순서/방법을 기재하고자 한다.
+
+800px의 화면에 무언가를 적용해보자고 가정하자.
+
+```css
+@media screen and (max-width: 800px) {
+  .foo {
+    display: none;
+  }
+}
+```
+
+만약에 이미 작성된 프로퍼티를 오버라이딩 하고 싶다면 이렇게 할 수 있다.
+
+```css
+@media screen and (max-width: 800px) {
+  .foo {
+    display: none !important;
+  }
+}
+```
+
+하지만 알다시피 `!important`를 남발하는 것은 CSS 설계에 치명적인 영향을 줄 수 있어 다른 방식을 사용하는 것이 좋다. 다른 방식은 아래와 같다.
+
+1. 클래스명 중복 사용
+   ```css
+   @media screen and (max-width: 800px) {
+     /* class foo && class foo */
+     .foo.foo {
+       display: none;
+     }
+   }
+   ```
+
+2. CSS는 탑 다운 방식으로 코드를 읽는다.
+   위에서부터 아래로 읽어 가므로, 아래의 것을 우선적용한다.(즉, 중첩시엔 가장 마지막 것을 읽는다.)
+
+   ```css
+   /* bad */
+   @media screen and (max-width: 800px) {
+     .foo {
+       display: none;
+     }
+   }
+   .foo {
+     display: block;
+   }
+   ```
+
+   ```css
+   /* good */
+   .foo {
+     display: block;
+   }
+   @media screen and (max-width: 800px) {
+     .foo {
+       display: none;
+     }
+   }
+   ```
+
+   그러므로, 모바일 이외의 기기 등에서 `min-width` 등을 이용한 최솟값을 주지 않고 `max-width`로만 범위를 구분 짓고자 할 경우 이렇게 할 수 있다.
+
+   ```css
+   @media only screen and (max-width: 960px) {
+     
+   }
+   @media only screen and (max-width: 768px) {
+     
+   }
+   @media only screen and (max-width: 640px) {
+     
+   }
+   ```
+
+   반대의 경우는 역순으로 올라가야 한다.(최솟값을 기준으로 하니까!)
+
+   ```css
+   @media only screen and (min-width: 320px) {}
+   @media only screen and (min-width: 480px) {}
+   @media only screen and (min-width: 640px) {}
+   ```
+
+   물론 둘을 동시에 줘서 범위를 주는 것도 현명하다.
+
+   ```css
+   @media only screen and (max-width: 320px) {}
+   @media only screen and (min-width: 320px) and (max-width: 480px) {}
+   @media only screen and (min-width: 480px) and (max-width: 640px) {}
+   /* ... */
+   @media only screen and (min-width: 960px) {}
+   ```
+
+   
+
+3. 중첩된 CSS 선택자의 사용시 그 이상 중첩하여 선언한다.
+   1번과 유사한 경우인데, 2개 이상의 선택자(Selectors)를 이용하여 CSS를 주었을 때, 그 수 이상을 중첩해서 CSS 선택자를 주어야 정상적으로 중첩한다.
+
+   ```css
+   .container .foo {
+     display: block;
+   }
+   @media screen and (max-width: 800px) {
+     .container .foo {
+       display: none;
+     }
+     /* or */
+     body .container .foo {
+       display: none;
+     }
+   }
+   ```
+
+   
 
 ## JavaScript
 
