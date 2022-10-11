@@ -1107,7 +1107,493 @@ bar(); // ReferenceError: bar is not defined
 
 
 
+### IntersectionObserver
 
+#### IntersectionObserver Interface
+
+IntersectionObserver 인터페이스는 대상 요소와 그 상위 요소 혹은 최상위 도큐먼트인 viewport와의 교차 영역의 변화를 비동기적으로 감지한다.
+
+IntersectionObserver는 두가지의 매개변수를 갖는다.
+
+```javascript
+const io = new IntersectionObserver(callback[, options]);
+```
+
+**callback**
+
+callback은 callback 함수를 칭하며, callback함수는 2개의 매개변수 entries와 observer를 갖는다.
+
+관찰할 Target이 등록되거나, 가시성(Visibility)에 변화가 생기면 호출된다.
+
+```javascript
+(entries, observer) => { ... }
+```
+
+- `entries`: 루트 요소와 타겟 요소의 트랜지션 순간을 묘사하는(즉, **교차 상태**를 표현) `IntersectionObserverEntry` 인스턴스의 Array
+
+  ```javascript
+  let callback = (entries, observer) => {
+    entries.forEach(entry => {
+      // Each entry describes an intersection change for one observed
+      // target element:
+      //   entry.boundingClientRect 관찰 대상의 사각형 정보(DOMRectReadOnly)
+      //   entry.intersectionRatio 관찰 대상의 교차한 영역 정보(DOMRectReadOnly)
+      //   entry.intersectionRect 관찰 대상의 교차한 영역 백분율(intersectionRect 영역에서 boundingClientRect 영역까지 비율, Number)
+      //   entry.isIntersecting 관찰 대상의 교차 상태(Boolean)
+      //   entry.rootBounds 지정한 루트 요소의 사각형 정보(DOMRectReadOnly)
+      //   entry.target 관찰 대상 요소(Element)
+      //   entry.time 변경이 발생한 시간 정보(DOMHighResTimeStamp)
+    });
+  };
+  ```
+
+  
+
+- `observer`: 콜백을 실행한 `IntersectionObserver` 자신을 참조
+
+**options**(Optional)
+
+options는 intersectionobserver가 호출되는 상황을 조작할 수 있으며, 3가지 필드를 갖는다.
+
+- root: 기본값은 브라우저의 `viewport`이며, root값이 지정되지 않거나, null일 때 사용된다. observe 중인 대상 객체가 보이는 기준을 어디로 할 지 정의한다. 반드시 Target의 조상 요소여야 한다.
+- rootMargin: root container의 바깥에 여백을 주어 그만큼 Root 범위를 `확장하거나 축소`한다. `css margin`과 같이 4단계로 설정이 가능하며, `px`혹은 `%`로 설정이 가능하다. 기본값은 `0px 0px 0px 0px`, 단위 입력은 필수이다.
+  - TOP, RIGHT, BOTTOM, LEFT /  `10px 30px 30px 10px`
+  - TOP, (LEFT, RIGHT) BOTTOM /  `10px 20px 10px`
+  - (TOP, BOTTOM), (LEFT, RIGHT) / `30px 20px`
+  - (TOP, BOTTOM, LEFT, RIGHT) / `-25px`
+- threshold: Observer가 실행되기 위해 Target의 가시성이 얼마나 필요한 지 적용한다. 기본값은 Array: [0]이지만, Number 타입의 단일 값으로도 작성 가능하다.
+  - `0`: 타겟의 가장자리 픽셀이 Root 범위를 교차하는 순간(타겟의 가시성이 0%일 때) 실행
+  - `0.5`: 타겟의 가시성  50%일 때 실행.
+  - `[0, 0.25, 1]`: 타겟의 가시성이 0%, 25%, 100%일 때 모두 실행.
+
+**Methods**
+
+- `observe`: 대상 요소의 관찰을 시작한다.
+- `unobserve`: 대상 요소의 관찰을 중지한다. 관찰 중이지 않은 요소를 지정한 경우 아무 동작도 하지 않는다.
+- `disconnect`: 인스턴스가 관찰하는 모든 요소의 관찰을 중지한다.
+- `takeRecords`: 현재 IntersectionObserver의 IntersectionObserverEntry 객체의 배열을 반환
+
+#### Infinite Scroll
+
+인피니트 스크롤은 과거에는 `windows.addEventListener('scroll', callback)`을 사용했지만, 현재는 `IntersectionObserver`를 주로 사용한다.
+
+**예제**
+
+```vue
+<template>
+  <div class="index-container">
+    <TheProfileCard></TheProfileCard>
+    <PostForm v-if="!!user" />
+    <PostCard v-for="p in mainPosts" :key="p.id" :post="p" />
+    <!-- mouse wheel 인식 위해 1px -->
+    <div ref="observe" style="height: 1px;" />
+  </div>
+</template>
+
+<script>
+definePageMeta({
+  middleware: [() => { console.log('inline') }]
+})
+import PostCard from '~/components/ThePostCard.vue';
+import PostForm from '~/components/ThePostForm.vue';
+import TheProfileCard from '~/components/TheProfileCard.vue';
+import { useUsersStore } from '~/stores/users';
+import { usePostsStore } from '~/stores/posts';
+export default {
+  name: 'IndexView',
+  components: { PostCard, PostForm, TheProfileCard },
+  setup() {
+    const name = 'Nuxt';
+    const usersStore = useUsersStore();
+    const postsStore = usePostsStore();
+    const user = computed(() => usersStore.state.me.nickname || usersStore.state.me.email);
+    const mainPosts = computed(() => postsStore.state.mainPosts);
+    const observe = ref(null);
+    onMounted(() => {
+      const { $trigger } = useNuxtApp();
+      $trigger('endLoading');
+
+      const options = {
+        root: null,
+        threshold: 0
+      }
+      const io = new IntersectionObserver((entries, observer) => {
+        entries.forEach((entry) => {
+          // 현재 교차상태가 true인 경우
+          if (entry.isIntersecting) {
+            // 현재 보던 옵저버 해제
+            observer.unobserve(entry.target);
+            // 새로 추가전 로딩 구현
+            postsStore.loadPosts();
+            const items = document.querySelectorAll('.postcard-container');
+            // 새 옵저버 추가
+            io.observe(observe.value);
+          }
+        })
+      }, options);
+      io.observe(observe.value);
+    });
+
+    return {
+      user,
+      mainPosts,
+      name,
+      observe
+    }
+  },
+}
+</script>
+
+```
+
+**예제2/3 공통설정**
+
+```javascript
+// main.js
+import { createApp } from 'vue'
+import App from './App.vue';
+import axios from "axios";
+
+const app = createApp(App);
+app.provide('axios', axios);
+app.mount('#app');
+
+```
+
+
+
+**예제2(Promise 활용)**
+
+```vue
+<template>
+  <div id="app">
+    <div v-cloak class="photos">
+      <div v-for="photo in photos"
+        :key="photo.id"
+        class="photo">
+      <div class="photo__title">{{ photo.title }}</div>
+      <div :style="`background-image: url(${photo.url});`"
+        :class="{ loaded: photo.imageLoaded }"
+        class="photo__image"></div>
+      </div>
+    </div>
+    <div id="scroll-observer"
+          v-if="showScrollObserver"
+          ref="scrollObserver">
+      <!-- 상시 작동중 -->
+      <div class="lds-ring"><div></div><div></div><div></div><div></div></div>
+    </div>
+  </div>
+</template>
+
+<script setup>
+  import { ref, inject } from 'vue';
+  let photos = ref([]);
+  let length = ref(4);
+  let showScrollObserver = ref(true);
+  let scrollObserver = ref(null);
+  const axios = inject('axios');
+  /**
+   * @summary 사진을 가져옵니다.
+   * @param {number} start - 가져올 사진의 시작 포인트
+   * @param {number} limit - 가져올 사진의 개수
+   * @return {Promise} - 비동기 실행을 위한 Promise 객체
+  */
+  function fetchPhotos (start = 1, limit = 1) {
+    return new Promise(resolve => {
+      const photosToFetch = []
+      for (let i = start; i < start + limit; i += 1) {
+        photosToFetch.push(axios(`https://jsonplaceholder.typicode.com/photos/${i}`));
+      }
+
+    Promise.all(photosToFetch)
+      .then(photos => {
+        return photos.map(photo => {
+          return {
+            ...photo.data,
+            imageLoaded: false
+          }
+        })
+      })
+        .then(fetchedPhotos => {
+          photos.value.push(...fetchedPhotos)
+          photos.value.forEach(photo => {
+          // 사진 로드를 대기
+          const image = new Image();
+          image.src = photo.url;
+          image.onload = () => {
+            photo.imageLoaded = true
+          }
+        });
+        resolve(true);
+    });
+    });
+  }
+  /**
+   * @summary Intersection Observer를 초기화합니다.
+  */
+  function initIntersectionObserver () {
+    const io = new IntersectionObserver((entries, observer) => {
+      entries.forEach(entry => {
+        // 요소(#scroll-observer)의 가시성이 확보되면..
+        if (entry.isIntersecting) {
+          fetchPhotos(length.value);
+          // For next photo
+          increasePhotoLength();
+          // unused var 회피용 observer 무의미한 호출
+          observer;
+        }
+      });
+      }, {
+      // 로딩 애니메이션이 보이지 않게 가져오기를 수행할 수 있도록..
+      // rootMargin: '0px 0px 400px 0px'
+      rootMargin: '0px 0px 0px 0px',
+      threshold: 1
+    })
+    io.observe(scrollObserver.value);
+  }
+    /**
+     * @summary 가져올 사진의 시작 포인트를 증가시킵니다.
+    */
+  function increasePhotoLength () {
+    length.value += 1
+    console.log(length.value)
+  }
+
+  // init
+  fetchPhotos(1, length.value)
+    .then(() => {
+    initIntersectionObserver()
+  })
+  // For next photo
+  increasePhotoLength()
+</script>
+
+<style>
+  .photos {
+    padding: 30px;
+  }
+
+  .photos .photo {
+    margin-bottom: 40px;
+  }
+  .photos .photo__title {
+    font-size: 18px;
+    font-weight: 700;
+    margin-bottom: 10px;
+    color: #444;
+    line-height: 1.4;
+  }
+  .photos .photo__image {
+    width: 100%;
+    height: 250px;
+    border-radius: 10px;
+    overflow: hidden;
+    background-position: center;
+    background-repeat: no-repeat;
+    background-size: cover;
+  }
+  .photos .loaded {
+    animation: jello 1s;
+  }
+
+  #scroll-observer {
+    height: 200px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+  }
+
+  /* For Vue */
+  [v-cloak] {
+    display: none;
+  }
+
+  /* Loader */
+  .lds-ring {
+    display: inline-block;
+    position: relative;
+    width: 64px;
+    height: 64px;
+  }
+  .lds-ring div {
+    box-sizing: border-box;
+    display: block;
+    position: absolute;
+    width: 51px;
+    height: 51px;
+    margin: 6px;
+    border: 6px solid #fff;
+    border-radius: 50%;
+    animation: lds-ring 1.2s cubic-bezier(0.5, 0, 0.5, 1) infinite;
+    border-color: #F86C06 transparent transparent transparent;
+  }
+  .lds-ring div:nth-child(1) {
+    animation-delay: -0.45s;
+  }
+  .lds-ring div:nth-child(2) {
+    animation-delay: -0.3s;
+  }
+  .lds-ring div:nth-child(3) {
+    animation-delay: -0.15s;
+  }
+  @keyframes lds-ring {
+    0% {
+      transform: rotate(0deg);
+    }
+    100% {
+      transform: rotate(360deg);
+    }
+  }
+  
+  @keyframes jello {
+  11.1% {
+    transform: none
+  }
+  22.2% {
+    transform: skewX(-12.5deg) skewY(-12.5deg)
+  }
+  33.3% {
+    transform: skewX(6.25deg) skewY(6.25deg)
+  }
+  44.4% {
+    transform: skewX(-3.125deg) skewY(-3.125deg)
+  }
+  55.5% {
+    transform: skewX(1.5625deg) skewY(1.5625deg)
+  }
+  66.6% {
+    transform: skewX(-0.78125deg) skewY(-0.78125deg)
+  }
+  77.7% {
+    transform: skewX(0.390625deg) skewY(0.390625deg)
+  }
+  88.8% {
+    transform: skewX(-0.1953125deg) skewY(-0.1953125deg)
+  }
+  100% {
+    transform: none
+  }
+</style>
+
+```
+
+**예제2(심플(image onload 처리등 생략) Async/Await 활용)**
+
+```vue
+<script setup>
+  import { ref, inject } from 'vue';
+  let photos = ref([]);
+  let length = ref(4);
+  let showScrollObserver = ref(true);
+  let scrollObserver = ref(null);
+  let loading = ref(null);
+  const axios = inject('axios');
+
+  async function fetchPhotos(start = 1,limit = 1) {
+    try {
+      if (length.value > 10) {
+        if (loading.value) loading.value.classList.remove('on-loading');
+        setTimeout(() => {
+          if (loading.value) loading.value.classList.add('on-loading');
+        }, 3000);
+        return;
+      }
+      if (loading.value) loading.value.classList.remove('on-loading');
+      for (let i = start; i < start + limit; i++) {
+        const { data } = await axios(`https://jsonplaceholder.typicode.com/photos/${i}`);
+        photos.value.push(data);
+      }
+      if (loading.value) loading.value.classList.add('on-loading');
+    } catch(err) {
+      console.log(err)
+    }
+  }
+
+  /**
+   * @summary Intersection Observer를 초기화합니다.
+  */
+  function initIntersectionObserver () {
+    const io = new IntersectionObserver((entries, observer) => {
+      entries.forEach(entry => {
+        // 요소(#scroll-observer)의 가시성이 확보되면..
+        if (entry.isIntersecting) {
+          fetchPhotos(length.value);
+          // For next photo
+          increasePhotoLength();
+          // unused var 회피용 observer 무의미한 호출
+          observer;
+        }
+      });
+      }, {
+      // 로딩 애니메이션이 보이지 않게 가져오기를 수행할 수 있도록..
+      // rootMargin: '0px 0px 400px 0px'
+      rootMargin: '0px 0px 0px 0px',
+      threshold: 1
+    })
+    io.observe(scrollObserver.value);
+  }
+    /**
+     * @summary 가져올 사진의 시작 포인트를 증가시킵니다.
+    */
+  function increasePhotoLength () {
+    length.value += 1
+    console.log(length.value)
+  }
+
+  // init
+  fetchPhotos(1, length.value)
+    .then(() => {
+    initIntersectionObserver()
+  })
+  // For next photo
+  increasePhotoLength()
+</script>
+```
+
+
+
+### Array
+
+#### Methods
+
+- Array.from()
+  유사 배열 객체(array-like object)나 반복 가능한 객체(iterable object)를 얕게 복사해 새로운`Array` 객체를 만든다.
+  
+  ```javascript
+  Array.from(arrayLike[, mapFn[, thisArg]]);
+  ```
+  
+  - `arrayLike`
+
+    배열로 변환하고자 하는유사 배열 객체나 반복 가능한 객체.
+
+  
+  - `mapFn`(Optional)
+  
+    배열의 모든 요소에 대해 호출할 맵핑 함수.
+  
+
+  - `thisArg`(Optional)
+  
+    `mapFn` 실행 시에 `this`로 사용할 값.
+  
+  예시
+  
+  ```javascript
+  Array.from('foo'); // Array ['f', 'o', 'o'];
+  Array.from([1, 2, 3], x => x + x); // Array [2, 4, 6];
+  ```
+  
+
+#### 이차원 배열의 생성
+
+```typescript
+// 먼저 fill로 값을 채우고, map 함수로 값(새 array)를 추가하는 것에 유의.
+let dp:Array<Array<number>> = new Array(nums.length).fill(0).map(x => new Array(nums.length).fill(0));
+// num type의 배열 type의 배열
+let dp:number[][] = Array.from(new Array(nums.length), x=> new Array(nums.length).fill(0));
+```
 
 
 
