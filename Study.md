@@ -1663,6 +1663,129 @@ git pull <remote_name> <branch_name> --allow-unrelated-histories
 
 This is the general documentation for vue 3 slots: [vuejs.org/guide/components/slots.html](https://vuejs.org/guide/components/slots.html) and the render function documentation contains a bit about using slots as well [vuejs.org/guide/extras/render-function.html#rendering-slots](https://vuejs.org/guide/extras/render-function.html#rendering-slots) 
 
+### Fetch Data
+
+Vue3의 data-fetching 방법 중 대표적인 몇 가지를 소개한다. 
+
+1. Fetch API(요즘은 미사용하는 추세)
+   ```vue
+   <script>
+   export default {
+     setup() {
+       const result = ref(null);
+       
+       fetch('URL')
+       	.then(res => res.json())
+       	.then(data => result.value = data);
+     }
+   }
+   </script>
+   ```
+
+2. axios(fetch를 써야한다면 대신 axios를 사용한다.)
+   ```vue
+   <script>
+     export default {
+       setup() {
+         const result = ref(null);
+         axios.get('URL')
+         	.then(data => result.value = data);
+         return { result }
+       }
+     }
+   </script>
+   ```
+
+3. async/await
+   ```vue
+   <script setup>
+     const result = ref(null);
+     onMounted(async () => {
+       result.value = await axios.get('URL');
+     });
+   </script>
+   
+   <!-- 혹은, 이와 같은 방법도 가능하다. -->
+   <!-- Child.vue -->
+   <script>
+   	async setup() {
+       const result = await axios.get('URL');
+       return { result }
+     }
+   </script>
+   <!-- Parent.vue -->
+   <template>
+   	<Suspense>
+     	<template #default>
+   			<Child />
+   		</template>
+   		<template #fallback>
+   			<div>loading...</div>
+   		</template>
+     </Suspense>
+   </template>
+   ```
+
+4. Composable(일반 / CacheMap 이용한 결과 저장)
+   ```javascript
+   import { ref, computed, reactive } from 'vue';
+   import axios from 'axios';
+   export const useFetch = (url, config = {}) => {
+     const data = ref(null);
+     const response = ref(null);
+     const error = ref(null);
+     const loading = ref(false);
+   
+     const fetch = async () => {
+       loading.value = true;
+       try {
+         const result = await axios.request({
+           url,
+           ...config
+         });
+         response.value = result;
+         data.value = result.data;
+       } catch (err) {
+         error.value = err;
+       } finally {
+         loading.value =false
+       }
+     }
+   
+     !config.skip && fetch();
+   
+     return { response, error, data, loading, fetch }
+   }
+   
+   // cache로 fetchData 저장해두기
+   const cacheMap = reactive(new Map());
+   
+   export const useFetchCache = (key, url, config) => {
+     const info = useFetch(url, { skip: true, ...config });
+   
+     const update = () => cacheMap.set(key, info.response.value);
+     const clear = () => cacheMap.set(key, undefined);
+   
+     const fetch = async () => {
+       try {
+         await info.fetch();
+         update();
+       } catch {
+         clear();
+       }
+     }
+   
+     const response = computed(() => cacheMap.get(key));
+     const data = computed(() => response.value?.data);
+   
+     if (response.value === null) fetch();
+     
+     return { ...info, fetch, data, response, clear };
+   }
+   ```
+
+   
+
 ## 용어 정리
 
 ### JavaScript / Vue
