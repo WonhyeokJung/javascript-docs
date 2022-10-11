@@ -1595,6 +1595,18 @@ let dp:Array<Array<number>> = new Array(nums.length).fill(0).map(x => new Array(
 let dp:number[][] = Array.from(new Array(nums.length), x=> new Array(nums.length).fill(0));
 ```
 
+#### 빈 배열 생성 후 각종 다양한 값을 넣어 초기화 하기
+
+`fill()`을 이용해 값을 초기화하지 않으면, `map()`의 사용이 불가능함에 유의한다.
+
+```typescript
+// length 길이의 배열 생성 후, fill()로 empty => undefined로 초기화 후, 값 적용
+const arr:Array<any> = new Array(length:number).fill().map(() => ({
+  foo: 'something',
+  bar: Math.floor(Math.random() * (10**13))
+}));
+```
+
 
 
 ## Git
