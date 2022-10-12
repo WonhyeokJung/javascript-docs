@@ -1107,6 +1107,22 @@ bar(); // ReferenceError: bar is not defined
 
 
 
+### Document Height
+
+화면의 높이를 구하는 방식에는 대표적으로 세 가지가 있다.
+
+1. `window.scrollY`: 현재 화면의 최상단 지점의 Y좌표를 반환한다.(기본값 0)
+2. `document.documentElement.clientHeight`: 스크롤에 상관없이 현재 화면의 높이를 반환한다.
+3. `document.documentElement.scrollHeight`: 스크롤까지 포함한 화면 전체의 높이를 반환한다.
+
+위의 세 가지는 화면의 맨 하단에 도달했을 때 1 + 2 === 3이 성립한다.(현재 화면 제일 높은 지점 좌표 + 현재 화면 높이 === 스크롤 포함한 전체 화면 높이)
+
+즉, 스크롤이 화면의 가장 하단에 도달한 경우,
+ `window.scrollY + document.documentElement.clientHeight === docuemnt.documentElement.scrollHeight`이다.
+
+만약 스크롤 최하단보다 100px 정도 높은 높이를 가지고 있다면,
+`window.scrollY + document.documentElement.clientHeight === document.documentElement.scrollHeight - 100`이 성립하는 것이다.
+
 ### IntersectionObserver
 
 #### IntersectionObserver Interface
