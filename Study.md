@@ -1655,6 +1655,54 @@ const arr:Array<any> = new Array(length:number).fill().map(() => ({
 
 
 
+## Node.js
+
+### 논 블로킹 기법
+
+자바스크립트에는 동시 실행이 가능한 작업(동기)과 동시 실행이 불가능한 작업(비동기)이 있다. 함수를 예로 들어보자.
+
+```javascript
+function longTask() {
+  // ...A task that takes long time..
+  console.log('done');
+}
+console.log('start');
+longTask();
+console.log('finish');
+```
+
+```javascript
+// result
+'start'
+'done'
+'finish'
+```
+
+이처럼 실행 컨테스트가 콜스택에 들어가 실행중인 `longTask()`함수 때문에 finish는 훨씬 먼저 끝낼 수 있음에도 오랜 시간을 기다려야 한다.
+이럴 때 사용하는 것이 **다른 코드의 실행을 막는 것을 방지**하는 논 블로킹 기법이다.
+
+1. setTimeout
+   세트타임아웃은 기본적으로 설정된 시간을 대기(최소 지연시간 4ms)한 후 **태스크 큐**로 보내지고 콜스택이 빌 때까지 기다리기 때문에, 동기적 실행 순서와는 관련이 없다. 그래서 setTimeout(callback, 0)을 이용하면 논 블로킹한 순서로 실행이 가능하다.
+
+   ```javascript
+   function longTask() {
+     // ...A task that takes long time..
+     console.log('done');
+   }
+   console.log('start');
+   setTimeout(longTask(), 0);
+   console.log('finish');
+   ```
+
+   ```javascript
+   // result
+   'start'
+   'finish'
+   'done'
+   ```
+
+   
+
 ## Git
 
 ### Semantic Commit Messages
@@ -1787,6 +1835,18 @@ git push -f <REMOTE_NAME> <BRANCH_NAME>
 - 개발자용 Package 설치
   ```bash
   npm i -D 'PACKAGE_NAME'
+  ```
+
+
+### 구버젼 패키지 확인
+
+```bash
+npm outdated
+```
+
+- 업데이트
+  ```bash
+  npm update
   ```
 
   
