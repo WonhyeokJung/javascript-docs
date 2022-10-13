@@ -1671,6 +1671,87 @@ git pull <remote_name> <branch_name> --allow-unrelated-histories
 1. Repo Name
    kebab-case
 
+
+
+### Fork와 Pull request
+
+Vue와 같은 대형 프로젝트에 참여한다고 할 때, 모든 개발자를 maintainer나 developer로 추가하는 것은 매우 어려울 것이다. 이런 경우, repository(원격 저장소, 이하 레포)를 Fork한 후, 수정사항을 pull request를 보내 merge를 요청하는 방식으로 개발이 많이 이루어진다.
+
+1. Fork
+   원하는 github 레포 페이지에 들어가 **clone이 아닌** Fork(우측 상단 star 옆에 아이콘이 있다.)를 통해서 내 고유의 레포를 생성한다. 이 때, 레포 네임은 자유롭게 지정이 가능하지만 되도록이면 기존 레포 이름을 따른다.
+
+2. Fork한 저장소를 Local로 Clone
+   Fork한 후 내 레포 목록을 봐보면 Fork한 레포가 추가되어 있다. 이는 내 고유한 리포지토리로, 개인적으로 생성한 레포처럼 사용할 수 있다.
+
+   ```bash
+   git clone <Forked Repository URL>
+   ```
+
+3. 루트 저장소 Remote 설정(Optional)
+   레포를 clone한 경우, origin이란 remote명으로 내 레포가 연결되어 있다. 가능하다면, 포크한 원본 저장소도 연결해 두는 것이 좋으나 필수는 아니다.
+
+   ```bash
+   # add remote
+   git remote add <REMOTE_NAME> <Root Repository URL(원본 저장소 URL)>
+   ```
+
+4. Branch 생성
+   꼭 Fork한 대형 프로젝트가 아니더라도, 자신이 맡은 개발파트에 따라 branch를 생성하거나, dev 등 단계에 따라 branch를 생성하는 것은 흔한 일이다.
+   예를 들면, 업데이트 버전 개발을 master branch에서 진행 중인데, 특정 코드에서 버그가 일어나 그 코드를 수정해야 하는 경우, master branch에 다같이 올리게 되면 현재 개발 중인 코드까지 전부 올라가는 불상사가 생기게 된다.(물론 `git add ./PATH`로 특정 파일만 올릴 수 있긴 하지만..) 이런 불상사를 대비하기 위해 독립적으로 branch를 생성해 특정 작업을 따로 시행하게 된다.
+
+   ```bash
+   git branch # Branch list
+   git branch <Branch name> # create branch
+   git checkout # check current branch
+   git checkout <Branch name> # change branch
+   git checkout -b <Branch name> # create&change branch
+   ```
+
+5. 코드 작업
+   기존에 하던 것처럼 코드를 작업하되, **브랜치 변경을 잊지 말아야 한다.**
+
+   ```bash
+   git add ./${PATH}
+   git commit -m 'message'
+   git push <REMOTE_NAME(default: origin)> <BRANCH_NAME>
+   
+   ```
+
+6. Compare & Pull Request
+   커밋과 푸쉬를 완료한 후, 내 레포로 돌아가보면 변경한 사항이 반영되어 있고, 그에 따라 `Compare & pull request`	버튼이 생긴 것을 볼 수 있다. 이를 클릭하고 이 요청에 대한 설명을 작성한다.(제목은 보통 커밋 메세지를 그대로 계승한다.)
+   윗 메뉴에서 풀 리퀘스트를 요청할 브랜치를 선택하고, 대상 브랜치를 원본 저장소에서 선택한 후 Pull request를 생성한다.
+
+7. Merge
+   관리자 측에서 코드를 확인 후, Merge 여부를 결정한다.
+
+8. Merge 이후 동기화 및 Branch 삭제
+   `3. 루트 저장소 Remote 설정(Optional)`에서 루트 저장소를 굳이 연결한 이유가 여기에 있는데, 루트 저장소를 pull받아 merge된 내용을 동기화하기 위함이다(pull시 브랜치 선택 주의할 것!). 이후 merge를 완료한 branch를 삭제한다.
+
+   ```bash
+   # pull original repo
+   git pull <ORIGINAL_REPO_REMOTE_NAME>
+   # delete branch
+   git branch -d <BRANCH_NAME>
+   ```
+
+#### Commit을 잘못한 경우
+
+Pull Request를 *closed*한 후 다시 작성할 수도 있겠지만, **Merge전에 바로 수정하는 방법**이 있다.
+
+일단 수정이 필요한 부분을 먼저 수정한 후,
+```bash
+git add .
+# 최신 커밋 덮어쓰기
+# message는 필수가 아니며, 작성하지 않을 시 기존 커밋 메세지를 계승한다.
+git commit --amend -m 'message'
+# -f : force
+git push -f <REMOTE_NAME> <BRANCH_NAME>
+```
+
+위와 같은 과정을 거치면 pull request에 들어가 있는 내 commit이 변경된 것을 볼 수 있다.
+
+
+
 ## NPM
 
 - 개발자용 Package 설치
@@ -1814,6 +1895,121 @@ Vue3의 data-fetching 방법 중 대표적인 몇 가지를 소개한다.
      
      return { ...info, fetch, data, response, clear };
    }
+   ```
+
+
+### 스크롤 위치 기억하기
+
+전 페이지로 돌아갔을 때 맨 위로 이동하는 경우 원래 보던 페이지를 다시 찾아야 하는 불편함이 있다.
+
+#### Nuxt
+
+현재 Nuxt3 RC9에선 전부 제대로 동작하지 않는다.
+
+1. vue-router options 설정
+
+   `scrollBehavior`는 **HTML5 History mode**에서만 동작한다.
+
+   경로: `~/app/router.options.ts`
+
+   ```typescript
+   import { RouterConfig } from '@nuxt/schema';
+   // vue-router options로 페이지 위치 기억하기
+   export default <RouterConfig>{
+     scrollBehavior(_to, _from, savedPosition) {
+       console.log(savedPosition); // 페이지가 옮겨질 때 이전 페이지의 스크롤 위치를 기억해둔다.
+       if (savedPosition) {
+         return savedPosition;
+       } else {
+         // 좌측 상위 좌표값과 scroll-behavior 설정
+         return { left: 0, top: 0, behavior: 'smooth' };
+       }
+     },
+   };
+   ```
+
+   
+
+2. 플러그인 설정
+
+   1번을 단순히 플러그인에서 설정한 것으로 1번과 같이 따로 불러오지 않아도 자동으로 작동한다.
+   경로 : `~/plugins/PLUGIN_NAME.js`
+
+   ```javascript
+   // ~/plugins/scroll-to.js
+   export default defineNuxtPlugin((nuxtApp) => {
+     nuxtApp.$router.options.scrollBehavior = async (to, from, savedPosition) => {
+       if (to.path !== from.path && process.client) {
+         if (savedPosition) {
+           return savedPosition;
+         } else {
+           window.scrollTo(0, 0);
+           // or
+           return { left: 0, top: 0 };
+         }
+       }
+     }
+   })
+   ```
+
+3. Middleware 설정
+   Middleware 내에서 scrollTo를 통해 값을 변경한다.
+   경로: `~/middleware/MIDDLEWARE_NAME.global.js`
+
+   ```javascript
+   export default defineNuxtRouteMiddleware((to, from) => {
+     if (to.path === from.path && process.client) {
+       // 스크롤 top으로
+       window.scrollTo(0, 0);
+     }
+   })
+   ```
+
+4. onMounted 내 설정
+   onMounted에 설정하면, 페이지 뒤로 가기를 할 때 mounted가 동작하면서 scrollTo를 적용한다.
+
+   ```vue
+   <!-- pages/index.vue -->
+   <template>
+   </template>
+   <script setup>
+     import { useIndexStore } from '~/stores/index';
+     const indexStore = useIndexStore();
+     const { state } = storeToRefs(indexStore);
+     onMounted(() => {
+       setTimeout(() => {
+         window.scrollTo(0, indexStore.state.scrollY || 0);
+         // or
+         window.scrollTo(0, state.scrollY || 0);
+       })
+     });
+   </script>
+   ```
+
+   ```vue
+   <!-- components/COMPONENT_NAME.vue -->
+   <script setup>
+     import { useIndexStore } from '~/stores/index';
+     const indexStore = useIndexStore();
+     onUnmounted(() => {
+       indexStore.setScroll(scrollY);
+     });
+   </script>
+   ```
+
+   ```javascript
+   export const useIndexStore = defineStore('index', () => {
+     const state = reactive({
+       scrollY: 0,
+     })
+     const setScroll = function (y) {
+       state.scrollY = y;
+     }
+     return {
+       state,
+       setScroll
+     }
+   });
    ```
 
    
