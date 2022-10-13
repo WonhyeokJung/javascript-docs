@@ -5,9 +5,9 @@
 ---
 
 1. [변수(Variable)](#변수(Variable))
-   1. [선언과 초기화](#Variable(Identifier) Declaration & Initialization)
+   1. [선언과 초기화](#Variable(Identifier)%20Declaration%20&%20Initialization)
    2. 
-2. [변수 호이스팅](#Variable Hoisting)
+2. [변수 호이스팅](#Variable%20Hoisting)
 3. 
 
 ---
