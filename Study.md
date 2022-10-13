@@ -38,13 +38,13 @@ Link의 경우 기본적으로 이렇게 연결한다.
 이미지 같은 경우 기본적으로 이와 같이 작성한다.
 ```markdown
 - bad
-![devToolsEx3](.\README.assets\devToolsEx3.png)
+![devToolsEx3](./README.assets/devToolsEx3.png)
 ```
 
 하지만 위 예시처럼 현재 경로(`.\`)를 표시하는 경우, 깃허브에선 이미지를 인식하지 못한다. 현재 경로를 작성하지 않는 경우 마크다운, 깃허브 양쪽에서 정상 인식하므로 현재 경로 표시는 회피하도록 하자.
 ```markdown
 - good
-![devToolsEx3](README.assets\devToolsEx3.png)
+![devToolsEx3](README.assets/devToolsEx3.png)
 ```
 
 
