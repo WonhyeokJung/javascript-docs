@@ -873,6 +873,475 @@ div.style.zIndex = 99;
   ```
   
 
+### Promise
+
+#### 등장배경
+
+기존의 콜백 패턴은 두 가지의 치명적인 단점을 갖고 있었다.
+
+1. 콜백 지옥(Callback hell)
+
+   ```typescript
+   const get = (url:string, successCallback:Function, failure:Function) => {
+     const xhr = new XMLHttpRequest();
+     xhr.open('GET', url);
+     xhr.send();
+     
+     xhr.onload = () => {
+       if (xhr.status === 200) {
+         successCallback(JSON.parse(xhr.response));
+       }
+     }
+   }
+   ```
+
+   Rest API를 이용해서 데이터를 가져올 때, 비동기 함수를 이용하게 되므로 마찬가지로 태스크 큐에 들어가 있어 **처리 결과를 외부로 반환이 불가능**한데, 이 처리 결과를 보통 콜백 함수를 주어 처리하게 된다. 하지만 위의 GET 요청의 결과를 이용해 계속 GET 요청을 발생시키면 이와 같은 콜백 지옥이 발생하게 된다.
+
+   ```javascript
+   get(url, a => {
+     get(url+`/${a}`, b => {
+       get(url+`/${b}`, c => {
+         console.log(c);
+       })
+     })
+   })
+   ```
+
+   
+
+2. 에러 처리의 어려움
+
+   ```javascript
+   try {
+     setTimeout(() => { throw new Error('error!') }, 1000)
+   } catch(e) {
+     // 캐치가 불가능.
+     console.error(e)
+   }
+   ```
+
+   이와 같은 비동기 콜백패턴 에러 처리 방식이 있다고 가정하자. 위 로직에서 에러는 발생하지 않는다. 에러는 호출자(caller) 방향으로 전달되는데, setTimeout 내부의 함수는 setTimeout이 부르는 것이 아닌, **이벤트 루프에 의해서 태스크 큐에서 콜스택이 전부 빈 후 이동**하게 된다. 따라서, 에러가 발생했을 때 이미 setTimeout은 정상적으로 실행되어 코드에는 문제가 발생하지 않는다.
+
+위와 같은 문제를 해결하기 위해 등장한 것이 바로, ES6의 Promise이다.
+
+#### 개요
+
+Promise는 ES6에서 도입된 **표준 빌트인 객체**이다.
+Promise 생성자 함수는 비동기 처리를 수행할 콜백 함수를 인수로 전달 받는데, 이 콜백 함수는 `resolve`와 `reject`함수를 인수로 전달받는다.
+
+```javascript
+const promise = new Promise((resolve, reject) => {
+  if (...) resolve('Hello world!');
+  else reject('You cannot go');
+})
+```
+
+
+
+```javascript
+const condition = true;
+const promise = new Promise((resolve, reject) => {
+  if (condition) {
+    resolve('성공');
+  } else {
+    reject('실패');
+  }
+});
+
+promise
+	.then((res) => {
+  console.log(res);
+})
+	.catch((err) => {
+  console.error(err);
+})
+	.finally(() => {
+  console.log('무적권')
+})
+
+// result
+// '성공'
+// '무적권'
+```
+
+- 콜백함수 내부에서 비동기 처리를 수행한 후, 비동기 처리가 성공하면 `resolve`함수에 결과를 인수로 전달하여 호출하고, 실패하면 `reject`함수에 결과를 인수로 전달하여 호출하게 된다.
+- new Promise는 바로 실행되지만, 결과값은 .then / .catch 메서드 실행시 받을 수 있다.
+  즉, 실행은 즉시 하지만 결과값은 나중에 받는 객체이다.
+
+#### 상태
+
+반환하는 Promise에는 세가지 진행 상태가 있는데,각각  `pending`, `fulfilled`, `rejected`이다.
+
+- `pending`: 기본 상태. 비동기 처리가 진행되지 않으면 계속 pending 상태를 유지한다.
+
+- `settled`: fulfilled와 rejected는 settled 상태에 속하는데, pending이 아닌 비동기 처리가 수행된 상태를 의미하며, settled 상태가 된 경우 다른 상태로의 변경은 불가능하다.
+
+  - `fulfilled`: 처리 성공. resolve 함수를 호출해 값을 반환하면 fulfilled 상태로 변경된다.
+
+  - `rejected`: 처리 실패. reject 함수를 호출해 값을 반환하면 rejected 상태로 변경된다.
+
+예제를 통해 결과를 봐보자.
+
+```typescript
+const fulfilled:Promise<any> = new Promise((resolve, reject) => resolve('성공'));
+console.log(fulfilled); // Promise{ <fulfilled>: '성공' }
+```
+
+```typescript
+const rejected:Promise<any> = new Promise((resolve, reject) => reject(new Error('Error occured')));
+console.error(rejected); // Promise{ <rejected>: Error: error occurred }
+```
+
+
+
+#### 후속 처리(Prototype Methods)
+
+앞에서 콜백 패턴이 콜백 함수로 후속 처리를 했던 것처럼, Promise도 Promise의 처리 결과를 사용하기 위해 후속 처리를 해야하는데, 이를 위해 후속 처리 메서드 `then`, `catch`, `finally`를 가지고 있다.
+
+**Promise.prototype.then**
+
+then 메서드는 두개의 콜백함수를 인수로 전달받고, 아래 두 개의 콜백함수는 인수로 Promise의 처리 결과를 전달받는다.
+
+1. Promise가 fulfilled 상태(resolve 함수가 호출된 상태)가 된 경우 호출되는 첫번째 콜백 함수
+2. Promise가 rejected 상태(reject 함수가 호출된 상태)가 된 경우 호출되는 두번째 콜백 함수
+
+위 두 콜백함수는 **핸들러 함수**로, **비동기적으로 처리**되는 것에 유의한다.
+
+```javascript
+// fulfilled
+// return Promise { <fulfilled>: undefined }
+new Promise(resolve => resolve('fulfilled'))
+	.then(res => console.log(res), err => console.log(err))
+
+// Error: rejected
+// return Promise { <fulfilled>: undefined }
+new Promise((resolve, reject) => reject(new Error('rejected')))
+	.then(res => console.log(res), err => console.error(err))
+```
+
+then 메서드는 언제나 **Promise를 반환**한다. then 메서드가 프로미스를 반환한 경우 그 값을 그대로, 아닌 경우 그 값을 암묵적으로 resolve 또는 reject하여 반환한다.
+
+**Promise.prototype.catch**
+
+catch 메서드는 한개의 콜백함수를 인수로 전달받고, 그 콜백함수는 Promise의 처리결과를 인수로 전달받는다. catch는 프로미스가 rejected 상태인 경우에만 작동한다.
+
+```javascript
+new Promise((_, reject) => reject(new Error('rejected')))
+	.catch(err => console.error(err))
+```
+
+then메서드와 마찬가지로 언제든지 **프로미스를 반환**한다.
+
+**Promise.prototype.finally**
+finally 메서드는 fulfilled, rejected 결과와 상관없이 **무조건 한번 호출**되며, 한개의 콜백 함수를 인수로 전달받는다. 따라서, Promise 상태와 상관없이 공통적으로 수행해야 할 처리 내용이 있을 때 유용하다.
+위 두 가지 메서드와 마찬가지로 항상 **프로미스를 반환**한다.
+
+```javascript
+fetch('https://jsonplaceholder.typicode.com/posts/1')
+	.then(res => res.json())
+	.then(res => console.log(res))
+	.catch(err => console.error(err))
+	.finally(() => console.log('finally it\'s done'))
+```
+
+#### 에러 처리
+
+에러처리는 위에서 보았듯이 `.then`혹은 `.catch` 메서드에서 처리할 수 있지만, 기본적으로 `.catch` 메서드를 사용한다. `.then`의 두 번째 콜백 함수는 첫 번째 콜백 함수에서 발생한 에러를 캐치하지 못하기 때문이다.
+
+```javascript
+// Promise { <rejected>: TypeError: console.blah is not a function }
+new Promise((resolve, reject) => resolve('hello world'))
+	// console.blah 에러처리 불가능
+	.then((res) => console.blah(res), err => console.error('에러발생'));
+```
+
+`.catch`를 `.then`메서드 이후 호출한 경우, `.then`내에서 발생한 에러도 전부 캐치할 수 있다.
+
+```javascript
+// 에러발생
+// return Promise { <fulfilled>: undefined } console.log가 리턴되어 이값이 전달됨.
+new Promise((resolve, reject) => resolve('hello world'))
+	.then((res) => console.blah(res))
+	.catch(err => console.error('에러발생'));
+```
+
+
+
+#### 프로미스 체이닝
+
+위에서 설명했듯이, `.then / .catch / .finally` 후속 처리 메서드는 기본적으로 **프로미스를 반환**하고, 반환한 값이 프로미스가 아니더라도 암묵적으로 **settled된 프로미스 객체**로 변경하여 반환하기 때문에, 결과값을 다시 후속 처리하고 싶다면 이어서 `.then`을 사용하면 된다.
+
+```javascript
+promise
+  .then((res) => {
+    return new Promise((resolve, reject) => {
+      resolve(res);
+    });
+  })
+  .then((res2) => {
+    console.log(res2); // res2 === resolve(res);
+    return new Promise((resolve, reject) => {
+      resolve(res2);
+    });
+  })
+  .then((res3) => {
+    console.log(res3); // res3 === resolve(res2);
+  })
+  .catch((err1) => {
+    console.error('err1', err1);
+  	return new Promise((resolve, reject) => {
+      reject(err1);
+    });
+  })
+	
+```
+
+콜백 지옥은 더이상 발생하지 않지만, 결국 **프로미스도 콜백 패턴을 사용**하므로 사실 가독성이 뛰어난 편은 아니다. 이 문제는 ES8에서 도입된 async/await를 통해 해결할 수 있다. 지금은 간단하게 예제만 살펴보자.
+
+```javascript
+function getUser(url) {
+  return new Promise((resolve, reject) => {
+    fetch(url)
+    	.then(res => res.json())
+    	.then(res => resolve(res))
+    	.catch(err => reject(err))
+    	.finally(() => console.log('finally it\'s done'));
+  })
+}
+
+const url = 'https://jsonplaceholder.typicode.com';
+(async () => {
+  const { userId } = await getUser(`${url}/posts/30`);
+  // 취득한 id 정보로 유저 검색
+  const res = await getUser(`${url}/users/${userId}`);
+  console.log(res);
+})();
+```
+
+위처럼 필요한 정보를 변수에 할당하여 깔끔하게 볼 수 있다.
+
+#### 정적 메서드(Static Methods)
+
+주로 생성자 함수로 사용되는 Promise지만 **함수도 객체**이므로 메서드를 가질 수 있다. 메서드는 총 5가지가 있다. 이후 Promise.any(ES2021기준)가 추가되어 총 6가지로 늘었다.
+
+**Promise.resolve**
+
+인수로 전달받은 값을 래핑하여 resolve된 프로미스 객체로 생성하기 위해서 사용한다.
+
+```javascript
+function returnPromiseResolve() {
+  return Promise.resolve({ name: 'abc' });
+}
+
+const foo = returnPromiseResolve();
+console.log(foo); // Promise { <fulfilled> { name: 'abc' } }
+foo.then(console.log); // { name: 'abc' }
+```
+
+아래의 예제와 동일하게 동작한다.
+
+```javascript
+function returnPromiseResolve() {
+  return new Promise(resolve => resolve({ name: 'abc' }));
+}
+```
+
+**Promise.reject**
+
+인수로 전달받은 값을 래핑하여 reject된 프로미스 객체로 생성하기 위해서 사용한다.
+
+```javascript
+function returnPromiseReject() {
+  return Promise.reject(new Error('경고, 경고'));
+}
+
+const foo = returnPromiseReject();
+foo.catch(console.error); // Error: 경고, 경고
+```
+
+아래의 예제와 동일하게 동작한다.
+
+```javascript
+function returnPromiseReject() {
+  return new Promise((_, reject) => reject(new Error('경고, 경고')));
+}
+```
+
+**Promise.all**
+
+```javascript
+Promise.all(iterable);
+```
+
+여러 개의 비동기 처리를 병렬 처리할 때 사용한다. 아래의 예제를 보자.
+
+```javascript
+const req1 = () => new Promise(resolve => setTimeout(() => resolve(1), 3000));
+const req2 = () => new Promise(resolve => setTimeout(() => resolve(2), 2000));
+const req3 = () => new Promise(resolve => setTimeout(() => resolve(3), 1000));
+
+const res = [];
+req1()
+	.then(r => {
+  	res.push(r);
+  	return req2();
+	})
+	.then(r => {
+  	res.push(r);
+  	return req3();
+	})
+	.then(r => {
+  	res.push(r);
+  	console.log(res); // 약 6초
+	})
+```
+
+순차적으로 처리하기 때문에, 약 6초 정도가 걸린다. 하지만 위 세개의 비동기 처리는 서로 의존성이 없고 개별적으로 수행된다. 개별적으로 따로 `.then`을 사용할 수도 있겠지만 그럼 코드가 이유없이 길어지게 되므로 이럴 때 사용하는 것이 병렬 처리를 위한 Promise.all이다.
+
+```javascript
+Promise.all([req1(), req2(), req3()])
+	.then(console.log) // 약 3초 소요
+```
+
+Promise를 요소로 갖는 배열 등의 이터러블을 인수로 받는다. **하나라도 reject가 되면 즉시 종료**(`.catch`실행)하며, **전부 fulfilled**가 된 경우 모든 처리 결과를 배열에 다시 담아 새로운 Promise를 반환한다.
+
+```javascript
+const promise1 = Promise.resolve('즉시 해결1');
+const promise2 = Promise.resolve('즉시 해결2');
+const promise3 = Promise.reject('즉시 거절');
+Promise.all([promise1, promise2, promise3])
+  .then((result) => {
+    console.log(result); // promise3이 없었다면, ['즉시 해결1', '즉시 해결2']
+  })
+  .catch((error) => {
+    console.error(error); // 즉시 거절 
+  });
+```
+
+전달받은 이터러블의 요소가 프로미스가 아닌 경우, 암묵적으로 Promise.resolve 메서드를 통해 프로미스로 래핑한다.
+
+```javascript
+Promise.all([1,2,3]) // Promise { <fulfilled>: Array(3) };
+	.then(res => console.log(res)) // [1, 2, 3], 리턴값은 Promise { <fulfilled>: undefined }
+```
+
+**Promise.race**
+
+Promise.all과 다른 것은 동일하지만 **가장 먼저 settled(fulfilled/rejected)**상태가 된 프로미스의 처리 결과를 다시 resolve/reject하는 새로운 프로미스를 반환한다.
+
+```javascript
+const promise1 = Promise.resolve('즉시 해결1');
+const promise2 = Promise.resolve('즉시 해결2');
+const promise3 = Promise.reject('즉시 거절');
+Promise.race([promise1, promise2, promise3]) // Promise { <fulfilled>: '즉시 해결' };
+  .then((result) => {
+    console.log(result); // '즉시 해결1'
+  })
+  .catch((error) => {
+    console.error(error); 
+  });
+```
+
+```javascript
+const req1 = () => new Promise(resolve => setTimeout(() => resolve('즉시 해결1'), 3000));
+const req2 = () => new Promise(resolve => setTimeout(() => resolve('즉시 해결2'), 2000));
+const req3 = () => new Promise((resolve, reject) => setTimeout(() => reject(new Error('즉시 거절')), 1000));
+Promise.race([req1(), req2(), req3()])
+  .then(res => console.log(res))
+  .catch(err => console.error(err)); // Error: 즉시 거절
+```
+
+**Promise.any**
+
+`Promise.any`와 비슷하지만 가장 먼저 **fulfilled**된 프로미스를 반환한다. 프로미스가 아닌 객체를 인수로 전달한 경우, 동기적으로 fulfilled된 프라미스를 반환한다.
+
+만약 모든 결과가 rejected된 경우 혹은 빈 iterable객체를 전달할 경우 **AggregateError 객체**(여러 개의 에러가 발생한 경우 하나의 에러로 치환하여 반환한다.)를 반환한다.
+
+```javascript
+// Promise 객체로 이루어진 배열
+const req1 = () => new Promise(resolve => setTimeout(() => resolve('즉시 해결1'), 3000));
+const req2 = () => new Promise(resolve => setTimeout(() => resolve('즉시 해결2'), 2000));
+const req3 = () => new Promise((resolve, reject) => setTimeout(() => reject(new Error('즉시 거절')), 1000));
+Promise.any([req1(), req2(), req3()])
+	.then(res => console.log(res)) // 즉시 해결 2
+	.catch(err => console.error(err));
+```
+
+```javascript
+// Promise 객체가 아닌 값으로 이루어진 배열
+Promise.any([1, 2, 3])
+	.then(res => console.log(res)) // 1
+	.catch(err => console.error(err));
+```
+
+
+
+```javascript
+// Promise rejected 객체로 이루어진 배열
+Promise.any([req3()])
+  .then(res => console.log(res))
+  .catch(err => console.error(err)); // [AggregateError: All promises were rejected]
+```
+
+```javascript
+// 빈 iterable 객체
+Promise.any([])
+  .then(res => console.log(res))
+  .catch(err => console.error(err)); // [AggregateError: All promises were rejected]
+```
+
+**Promise.allSettled**
+
+Promise 객체를 담은 iterable 객체를 인수로 받아, **settled(fulfilled/rejected)**된 결과를 배열에 담아 전달한다. `Promise.all`과 달리 rejected가 발생하더라도 멈추지 않는다. 만약 Promise 객체가 아닌 값을 전달한다면 암묵적으로 resolve된 프로미스 객체를 반환한다.
+
+- fulfilled: `{ status: fulfilled, value: ... }`
+- rejected: `{ status: rejected, reason: ... }`
+
+```javascript
+Promise.allSettled([1, 2, 3])
+  .then(res => console.log(res))
+  .catch(err => console.error(err));
+/**
+	[
+		{ status: 'fulfilled', value: 1 },
+		{ status: 'fulfilled', value: 1 },
+		{ status: 'fulfilled', value: 1 }
+	]
+*/
+```
+
+```javascript
+const req1 = () => new Promise(resolve => setTimeout(() => resolve('즉시 해결1'), 3000));
+const req2 = () => new Promise((resolve, reject) => setTimeout(() => resolve('즉시 해결2'), 2000));
+const req3 = () => new Promise((resolve, reject) => setTimeout(() => reject(new Error('즉시 거절')), 1000));
+Promise.allSettled([req1(), req2(), req3()])
+  .then(res => console.log(res))
+  .catch(err => console.error(err));
+/**
+  [
+    { status: 'fulfilled', value: '즉시 해결1' },
+    { status: 'fulfilled', value: '즉시 해결2' },
+    {
+      status: 'rejected',
+      reason: Error: 즉시 거절
+          at Timeout._onTimeout (./foo.js:3:77)
+          at listOnTimeout (node:internal/timers:559:17)
+          at processTimers (node:internal/timers:502:7)
+    }
+  ]
+*/
+```
+
+빈 객체를 인수로 전달한 경우, 그대로 빈 객체를 반환한다.
+
+```javascript
+Promise.allSettled([])
+	.then(res => console.log(res)) // []
+	.catch(err => console.error(err));
+```
+
+---
+
 ### Shorthand Properties
 
 단축(축약) 속성명은 객체의 Key와 Value가 같을 떄 사용할 수 있다.
@@ -1653,7 +2122,11 @@ const arr:Array<any> = new Array(length:number).fill().map(() => ({
 }));
 ```
 
+### 기타
 
+#### 프로토타입 메서드와 정적 메서드의 차이
+
+프로토타입 메서드는 **생성자 함수**의 인스턴스를 생성한 후 호출할 수 있으며, 정적 메서드는 인스턴스를 생성하지 않아도 호출할 수 있는 메서드이다.
 
 ## Node.js
 
