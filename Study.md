@@ -1356,7 +1356,7 @@ Promise.resolve()
 // return 2 3 1
 ```
 
-
+Node.js 환경에서는 `process.nextTick(() => { ... })`도 마이크로태스크 큐이다.
 
 ---
 
@@ -2153,6 +2153,22 @@ const arr:Array<any> = new Array(length:number).fill().map(() => ({
 변수 뒤에 `!`을 붙여 null 혹은 Undefined가 아님을 확신한다.
 
 ## Node.js
+
+#### This
+
+Node.js의 This는 브라우저와는 조금 다르다.
+
+```javascript
+console.log(this); // {}
+console.log(this === module.exports); // true
+console.log(this === exports); // true
+function whatIsThis() {
+  console.log('function', this === exports, this === global);
+}
+whatIsThis(); // 'function' false true
+```
+
+함수 선언문 내부의 This는 `global` 객체를 가리키고, 전역에서는 `module.exports(또는 exports)객체`를 가리킨다.
 
 ### 논 블로킹 기법
 
