@@ -1122,7 +1122,7 @@ const url = 'https://jsonplaceholder.typicode.com';
 
 #### 정적 메서드(Static Methods)
 
-주로 생성자 함수로 사용되는 Promise지만 **함수도 객체**이므로 메서드를 가질 수 있다. 메서드는 총 5가지가 있다. 이후 Promise.any(ES2021기준)가 추가되어 총 6가지로 늘었다.
+주로 생성자 함수로 사용되는 Promise지만 **함수도 객체**이므로 메서드를 가질 수 있다. 메서드는 총 5가지가 있다. 이후 Promise.any[ES12(EcmaScript 2021)기준]가 추가되어 총 6가지로 늘었다.
 
 **Promise.resolve**
 
@@ -1339,6 +1339,24 @@ Promise.allSettled([])
 	.then(res => console.log(res)) // []
 	.catch(err => console.error(err));
 ```
+
+
+
+#### 마이크로태스크 큐
+
+비동기 함수는 태스크 큐에 들어가는 것으로 알고 있지만, 프로미스의 후속 메서드(`.then`, `.catch`, `.finally`)는 마이크로태스크 큐라는 별도의 큐를 사용한다. 콜백 함수나 이벤트 핸들러가 임시 저장된다는 점은 동일하지만 **마이크로태스크 큐는 태스크 큐보다 우선**해서 콜 스택에 들어간다. 즉, `콜스택 → 마이크로태스크큐 → 태스크큐`순으로 실행된다.
+
+```javascript
+setTimout(() => console.log(1), 0);
+
+Promise.resolve()
+	.then(() => console.log(2))
+	.then(() => console.log(3));
+// 1, 2, 3 순일 것 같지만...
+// return 2 3 1
+```
+
+
 
 ---
 
@@ -2127,6 +2145,12 @@ const arr:Array<any> = new Array(length:number).fill().map(() => ({
 #### 프로토타입 메서드와 정적 메서드의 차이
 
 프로토타입 메서드는 **생성자 함수**의 인스턴스를 생성한 후 호출할 수 있으며, 정적 메서드는 인스턴스를 생성하지 않아도 호출할 수 있는 메서드이다.
+
+## TypeScript
+
+### Non-null assertion operator
+
+변수 뒤에 `!`을 붙여 null 혹은 Undefined가 아님을 확신한다.
 
 ## Node.js
 
