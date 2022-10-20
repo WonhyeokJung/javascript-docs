@@ -2152,6 +2152,85 @@ const arr:Array<any> = new Array(length:number).fill().map(() => ({
 
 변수 뒤에 `!`을 붙여 null 혹은 Undefined가 아님을 확신한다.
 
+```typescript
+let words = ['a', 'b', 'c', 'd', 'a', 'c', 'b'];
+let res:Map<string, number> = new Map();
+for (let i = 0; i < words.length; i++) {
+  res.set(words[i], res.has(words[i]) ? res.get(words[i])! + 1 : 1);
+}
+console.log(res); // Map(4) { 'a' => 2, 'b' => 2, 'c' => 2, 'd' => 1 }
+```
+
+### Object의 key값에 String을 넣지 못할 때(TS7053)
+
+> TS7053: Element implicitly has an 'any' type because expression of type 'string' can't be used to index type 'Object'.
+
+타입스크립트에서는 이처럼 객체의 키값에 문자열을 사용하면 컴파일 에러를 발생시킨다.
+
+```typescript
+const obj:Object = {
+  foo: 'hello',
+  1000: 'X'
+}
+console.log(obj['foo']); // TS7053 compile error
+```
+
+이것은 타입스크립트의 [Index Signatures](https://www.typescriptlang.org/docs/handbook/2/objects.html#index-signatures)문제와 관련이 있다.
+
+즉, 프로퍼티를 인덱스로 사용하는데, 이 때 인덱스의 타입이 정확히 정의되지 않아 에러가 발생하는 것이다.
+
+이를 가능하게 하는 방법은 직접 타입 관련 설정을 하는 `Index Signature	`를 정의하는 것이다.
+
+1. 타입 정의
+
+```typescript
+type objType = {
+  [key: string]: string
+}
+// or
+interface ObjType = {
+  [key: string]: any
+}
+const obj:objType = {
+  foo: 'hello',
+  1000: 'X'
+}
+console.log(obj['foo'], obj['1000']);
+```
+
+2. Index Signatures 정의
+
+```typescript
+const obj:{ [key:string]:any } = {
+  foo: 'hello',
+  1000: 'X'
+}
+console.log(obj['foo'], obj['1000']);
+```
+
+3. Record<Keys, type> utility 사용([Record](https://www.typescriptlang.org/docs/handbook/utility-types.html#recordkeys-type)참조)
+
+```typescript
+// 3. Record<Keys, type> utility 사용
+// Record는 오브젝트의 키와 밸류 타입 설정을 위해 사용된다.
+const obj:Record<string, string> = {
+  foo: 'hello',
+  1000: 'X'
+}
+console.log(obj['foo'], obj['1000']);
+```
+
+4. Map 사용
+
+```typescript
+const obj = new Map();
+obj.set('foo', 'hello');
+obj.set('1000', 'X');
+console.log(obj.get('foo'), obj.get('1000'));
+```
+
+
+
 ## Node.js
 
 #### This
