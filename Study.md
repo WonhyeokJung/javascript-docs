@@ -2483,7 +2483,15 @@ npm audit
 npm audit fix
 ```
 
+### package-lock.json과 package.json
 
+**package-lock.json**
+
+내가 설치한 패키지들에도 사용하는 패키지들이 있을 수 있다. 이 패키지들의 버전과 의존 관계를 표현해 기록해 두는 역할을 한다.
+
+**package.json**
+
+내 패키지들에 관련된 정보와 의존성 등을 기록한 json파일이다.
 
 ### 인스톨 명령어
 
@@ -2491,7 +2499,7 @@ npm audit fix
 
 ```bash
 # devDependencies에 패키지를 추가한다. npm build --production 혹은 npm install --production시 devDependencies의 패키지는 추가되지 않는다.
-npm install packge -dev
+npm install packge --save-dev
 # package.json에 패키지 추가. 기본 옵션으로 적용되어 있다.
 npm install --save
 # packge.json에 추가하지 않음.
@@ -2503,8 +2511,8 @@ npm install package@${version}
 # /usr/local/lib/node_modules
 # 윈도우의 경우
 # c:\Users\%USERNAME%\AppData\Roaming\npm\node_modules
-npm install -g
-npm install --location=global
+npm install -g # deprecated
+sudo npm install --location=global # mac은 전역 설치시 관리자 권한이 필수다.
 ```
 
 
