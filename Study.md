@@ -2465,7 +2465,49 @@ npm outdated
   npm update
   ```
 
-  
+### Prefix 경로 확인
+
+전역 npm_modules의 위치를 확인한다.
+
+```bash
+npm root -g
+```
+
+### 취약 패키지 확인
+
+보안에 심각한 취약점을 가지고 있는 패키지를 확인한다.
+
+```bash
+npm audit
+#  자동 수정
+npm audit fix
+```
+
+
+
+### 인스톨 명령어
+
+> https://docs.npmjs.com/cli/v8/commands/npm-install
+
+```bash
+# devDependencies에 패키지를 추가한다. npm build --production 혹은 npm install --production시 devDependencies의 패키지는 추가되지 않는다.
+npm install packge -dev
+# package.json에 패키지 추가. 기본 옵션으로 적용되어 있다.
+npm install --save
+# packge.json에 추가하지 않음.
+npm install --no-save
+# 기재한 version의 패키지 추가
+npm install package@${version}
+# 현재 워킹 디렉토리가 아닌 prefix 폴더에 추가(전역 설치)
+# macOS의 경우
+# /usr/local/lib/node_modules
+# 윈도우의 경우
+# c:\Users\%USERNAME%\AppData\Roaming\npm\node_modules
+npm install -g
+npm install --location=global
+```
+
+
 
 ## Vue
 
