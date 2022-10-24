@@ -2515,6 +2515,12 @@ npm install -g # deprecated
 sudo npm install --location=global # mac은 전역 설치시 관리자 권한이 필수다.
 ```
 
+### package.json 모듈 전역 설치처럼 사용하기
+
+```bash
+npm [module name] ${commands}
+```
+
 
 
 ## Vue
