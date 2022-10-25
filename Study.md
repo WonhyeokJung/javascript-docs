@@ -2448,6 +2448,8 @@ git push -f <REMOTE_NAME> <BRANCH_NAME>
 
 ## NPM
 
+> [https://docs.npmjs.com/](https://docs.npmjs.com/)
+
 - 개발자용 Package 설치
   ```bash
   npm i -D 'PACKAGE_NAME'
@@ -2527,6 +2529,9 @@ npm install package@${version}
 # c:\Users\%USERNAME%\AppData\Roaming\npm\node_modules
 npm install -g === npm install --global# deprecated
 sudo npm install --location=global # mac은 전역 설치시 관리자 권한이 필수다.
+# package-lock.json에 의존하여 설치
+# 더 엄격한 버젼 통제 가능.
+npm ci
 ```
 
 ### package.json 모듈 전역 설치처럼 사용하기
@@ -2546,6 +2551,8 @@ npm version major # 0.1.1 => 1.0.0
 npm version minor # 1.0.1 => 1.1.0
 # 현재 패키지 패치 버젼 상 / 기존 기능 버그 수정
 npm version patch # 0.0.9 => 0.0.10
+# deprecated 경고 메세지 출력. 자신의 패키지에만 적용 가능.
+npm deprecate [package name] [version] [message]
 ```
 
 ```javascript
@@ -2568,7 +2575,86 @@ npm install package@x # latest version
 npm install package@next # latest version including alpha or beta ver.
 ```
 
+### 로그인 및 개인정보 관리
 
+```bash
+npm adduser # 로그인
+npm whoami # 로그인한 유저 확인
+npm logout # adduser로 로그인한 유저 로그아웃
+```
+
+### 배포
+
+```bash
+npm publish # 자신이 생성한 패키지 배포
+npm unpublish [package name]# 배포한 패키지 제거. 24시간 이내 배포한 패키지만 제거 가능
+npm unpublish [package name] --force # 72시간 내 가능. 배포한 패키지 영구 삭제.
+npm owner ls [package name] # 패키지명 소유자 확인
+```
+
+### 패키지 배포 예시
+
+1. root 폴더 내 `npm init -y` 후 package.json 작성
+
+   ```javascript
+   {
+     "name": "vuejs-slider",
+     "version": "0.0.3",
+     "description": "Simple Slider for Vue.js",
+     "scripts": {},
+     "keywords": [
+       "slider",
+       "vue",
+       "carousel",
+       "slide",
+       "slideshow"
+     ],
+     "repository": {
+       "type": "git",
+       "url": "https://github.com/WonhyeokJung/vue-slider.git"
+     },
+     "author": {
+       "name": "WonhyeokJung",
+       "url": "https://WonhyeokJung.github.io"
+     },
+     "license": "MIT",
+     "bugs": {
+       "url": "https://github.com/WonhyeokJung/vue-slider/issues",
+       "email": ""
+     }
+   }
+   ```
+
+2. 사용할 패키지명 중복 확인
+
+   ```bash
+   npm info <Package_Name>
+   ```
+
+3. terminal에서 npm 로그인
+
+   ```bash
+   npm login / npm whoami / npm logout
+   ```
+
+4. root 폴더 README.md / LICENSE / .gitinore 추가(Optional)
+
+5. 배포 전 테스트(Optional)
+
+   - 다른 폴더 생성후 `npm init / npm install <PACKAGE_PATH>`(package.json 있는 root 폴더) 실행
+   - 이후 코드 정상작동 되는 지 확인
+
+6. 배포
+
+   ```bash
+   npm publish
+   ```
+
+7. 사용
+
+   ```bash
+   npm install <PACKAGE_NAME> // 상위 예시의 경우 vuejs-slider
+   ```
 
 ## Vue
 
@@ -2904,7 +2990,7 @@ Vue3의 data-fetching 방법 중 대표적인 몇 가지를 소개한다.
   }
   ```
 
-#### npm
+### npm
 
 - RC: rc(Release Candidate) 출시 직전 패키지.
 
