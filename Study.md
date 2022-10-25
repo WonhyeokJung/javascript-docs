@@ -2457,13 +2457,27 @@ git push -f <REMOTE_NAME> <BRANCH_NAME>
 ### 구버젼 패키지 확인
 
 ```bash
-npm outdated
+npm outdated # 업데이트 가능 확인
 ```
 
 - 업데이트
   ```bash
-  npm update
+  npm update [package name(optional)] # update package to wanted version.
   ```
+
+### 패키지 검색
+
+```bash
+npm search ${PACKAGE_NAME}
+```
+
+### 패키지 상세정보
+
+```bash
+npm info ${PACKAGE_NAME}
+```
+
+
 
 ### Prefix 경로 확인
 
@@ -2499,7 +2513,7 @@ npm audit fix
 
 ```bash
 # devDependencies에 패키지를 추가한다. npm build --production 혹은 npm install --production시 devDependencies의 패키지는 추가되지 않는다.
-npm install packge --save-dev
+npm install package --save-dev === npm install package --D
 # package.json에 패키지 추가. 기본 옵션으로 적용되어 있다.
 npm install --save
 # packge.json에 추가하지 않음.
@@ -2511,7 +2525,7 @@ npm install package@${version}
 # /usr/local/lib/node_modules
 # 윈도우의 경우
 # c:\Users\%USERNAME%\AppData\Roaming\npm\node_modules
-npm install -g # deprecated
+npm install -g === npm install --global# deprecated
 sudo npm install --location=global # mac은 전역 설치시 관리자 권한이 필수다.
 ```
 
@@ -2519,6 +2533,39 @@ sudo npm install --location=global # mac은 전역 설치시 관리자 권한이
 
 ```bash
 npm [module name] ${commands}
+```
+
+### package.json 버젼관리
+
+```bash
+# 현재 패키지 및 모든 의존 패키지 버젼
+npm version
+# 현재 패키지 메이저 버젼 상승 / 하위 호환 불가능
+npm version major # 0.1.1 => 1.0.0
+# 현재 패키지 마이너 버젼 상승 / 메이저 버젼간 호환 가능한 수준의 업데이트
+npm version minor # 1.0.1 => 1.1.0
+# 현재 패키지 패치 버젼 상 / 기존 기능 버그 수정
+npm version patch # 0.0.9 => 0.0.10
+```
+
+```javascript
+// 혹은 package.json
+{
+  "name": "test-package",
+  "version": "0.0.1", // 직접 수정
+  ...,
+  },
+}
+```
+
+```bash
+npm install package@^1.4.6 # 1.4.6 <= ver < 2.0.0
+npm install package@~4.18.2 # 4.18.2 <= ver < 4.19.0
+npm install package@1.17.x # 1.17.0 <= ver < 1.18.0
+npm install package@>1.1.1 # ver > 1.1.1 / >, >=, =, =<, <
+npm install package@latest # latest version
+npm install package@x # latest version
+npm install package@next # latest version including alpha or beta ver.
 ```
 
 
@@ -2857,6 +2904,9 @@ Vue3의 data-fetching 방법 중 대표적인 몇 가지를 소개한다.
   }
   ```
 
+#### npm
+
+- RC: rc(Release Candidate) 출시 직전 패키지.
 
 ## VSCODE
 
