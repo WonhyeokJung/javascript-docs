@@ -1585,8 +1585,137 @@ bar(); // ReferenceError: bar is not defined
 
 
 
+### Module
 
-### export의 두가지 방식
+#### ES6(EcmaScript2015) 이전
+
+완성도가 아주 대단한 자바스크립트에 모듈이 없던 시절에 스크립트가 커지고 모듈의 필요성이 대두되면서 `AMD`나 `CommonJS`가 등장해 모듈을 불러왔다.
+
+Node.js와 Express 프레임워크를 이용한 그 예시를 보자.
+
+```json
+// package.json
+{
+  "main": "app.js", // 실행시 최초 진입할 js 파일을 설정한다.
+  "scripts": {
+    "start": "nodemon app"
+  },
+ 	"dependencies": {
+    "express": "^4.18.2"
+  },
+  "devDependencies": {
+    "nodemon": "^2.0.20"
+  }
+}
+```
+
+```javascript
+// app2.js
+const express = require('express');
+
+const app = express();
+process.env.PORT = 3001;
+app.set('port', process.env.PORT || 3000);
+
+// get요청
+app.get('/', (req, res) => {
+  // 단순 문자열
+  // res.send('Hello, Express');
+  // html 페이지
+  res.sendFile(path.join(__dirname, '/index.html'));
+});
+
+app.listen(app.get('port'), () => {
+  console.log(app.get('port'), '번 포트에서 서버가 실행중입니다.');
+});
+
+module.exports = {
+  app
+}
+
+```
+
+```javascript
+// app.js 최초 실행 페이지.
+const app = require('./app2'); // app2.js에서 만든 const app을 불러온다.
+```
+
+#### module.exports vs exports
+
+- `module.exports`는 빈 객체를 참조한다.
+- `exports`는 `module.exports`를 참조한다.
+
+```javascript
+// module.exports를 항상 참조하기 때문에, 객체를 수정하지 않고 생성/수정이 가능하다.
+exports.[SOMTHING] = SOMETHING;
+// 항상 새로운 객체가 할당되므로, 무한정 사용하기에는 부담이 있다.
+module.exports = {
+  SOMETHING,
+};
+// or
+module.exports = () => {
+  SOMETHING,
+}
+```
+
+이후, `require`는 항상 `module.exports`를 리턴받아 사용한다.
+
+#### import/export
+
+`package.json`이 기본적으로 `CommonJS`를 베이스로 하고 있기 때문에, `ES module`타입인 `import/export`, `.mjs`등을 사용하려면 **type**을 설정해주어야 한다.
+
+```javascript
+{
+ "type": "module", // ESModule을 인식하게 한다.
+}
+```
+
+```javascript
+// app2.js
+import express from 'express';
+import path from 'path';
+import { fileURLToPath } from 'url';
+
+const __filename = fileURLToPath(import.meta.url);
+// dirname 설정
+const __dirname = path.dirname(__filename);
+
+const app = express();
+// export default const app = express();
+process.env.PORT = 3001;
+app.set('port', process.env.PORT || 3000);
+
+// get요청
+app.get('/', (req, res) => {
+  // 단순 문자열
+  // res.send('Hello, Express');
+  // html 페이지
+  res.sendFile(path.join(__dirname, '/index.html'));
+});
+
+app.listen(app.get('port'), () => {
+  console.log(app.get('port'), '번 포트에서 서버가 실행중입니다.');
+});
+
+export {
+  app
+}
+
+// or
+export default app;
+```
+
+```javascript
+// webpack 사용시 .js 생략가능
+import { app } from './app2.js';
+// import app from './app2.js';
+// 따로 부르지 않아도 자동인식한다.
+```
+
+
+
+
+#### export의 두가지 방식
 
 1. `export default` 방식
 
@@ -1616,6 +1745,7 @@ bar(); // ReferenceError: bar is not defined
    // import
    import { abc, foo, bar } from 'SOMEWHERE';
    ```
+
 
 
 ### SSR - Cookie와 CSR - localStorage
@@ -2321,7 +2451,7 @@ console.log('finish');
 
 ## Git
 
-### Semantic Commit Messages
+### Semantic Commit Messages(의미론적 커밋 메세지)
 
 - `feat`: (new feature for the user, not a new feature for build script)
   - `example`: [feat] ISSUE-001: add slider
