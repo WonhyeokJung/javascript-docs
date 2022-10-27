@@ -2447,7 +2447,252 @@ console.log('finish');
    'done'
    ```
 
+
+### Middleware
+
+미들웨어는 요청(req)과 응답(res)의 중간에 위치하여 요청과 응답을 제어하는 역할을 한다. 잘못된 요청이 들어오면 에러를 출력하거나 요청 혹은 응답을 조작하여 보내기도 한다.
+
+미들웨어의 일반적인 사용법은 아래와 같다.
+
+- 미들웨어는 위에서부터 아래로 실행된다.
+- next()가 없으면 다음 미들웨어가 실행되지 않고, 웹페이지가 무한로딩에 빠져 계류한다.
+- 그러므로, next()를 사용하지 않을 경우 res.send() 혹은 res.sendFile() 등으로 응답을 보내야 한다.(예를 들면, express.static 같은 정적 파일을 사용할 경우)
+
+1. `app.use`의 사용
+   가장 일반적인 방식으로 
    
+   ```javascript
+   // app.use('/PATH(optional)', [middleware, [middleware, ]])식으로 작성하면 된다.
+   // '/PATH'로의 모든 요청(GET, POST, PUT, PATCH, DELETE)에서 실행
+   // '/PATH' 생략시 모든 요청에서 실행
+   app.use((req, res, next) => {
+     console.log('모든 요청에 다 실행됩니다.');
+     next();
+   }, (req, res, next) => {
+     console.log('여기 모든 요청에 이은 다음 요청이 next()를 통해 왔네요. next()를 통해 app.get으로 갈까요?');
+     next();
+   });
+   ```
+   
+2. app.[HTTP METHOD]
+   ```javascript
+   // /PATH로 시작하는 get요청에서 실행
+   // app.get('/PATH', [middleware, [middleware, ...]]) 식으로 작성하며, app.[post, put, patch, delete]()도 같다.
+   app.get('/', (req, res, next) => {
+     console.log('GET / 요청에서만 실행됩니다.');
+     next();
+   }, (req, res) => {
+     throw new Error('에러는 에러 처리 미들웨어로 갑니다.');
+   });
+   ```
+
+3. Errors
+   ```javascript
+   // 에러처리의 경우 4가지의 매개변수를 갖고 있다. 사용하지 않더라도 반드시 작성해야한다.
+   // 별 다른 일이 없는 경우 가장 아래에 있는 것이 좋다.
+   app.use((err, req, res, next) => {
+     console.error(err);
+     res.status(500).send(err.message);
+   });
+   ```
+
+
+
+#### Express에서 자주 사용하는 미들웨어 패키지
+
+**Morgan**
+
+요청과 응답에 대한 정보를 기록해준다.
+
+- 설치 
+
+   `npm install morgan`
+
+- 사용
+
+  ```javascript
+  import morgan from 'morgan';
+  app.use(morgan(ARGUMENTS));
+  // 인수는 'dev', 'combined', 'short', 'tiny', 'common' 등이 있다.
+  ```
+
+- 결과
+  ```bash
+  # console / morgan('dev') 기준
+  GET / 500 7.409 ms – 50
+  [HTTP METHOD] [ADDRESS] [HTTP STATUS CODE] [RESPONSE TIME] [RESPONSE BYTE]
+  ```
+
+**static**
+
+정적인 파일들을 제공하는 라우터 역할을 한다. 기본적으로 제공되기 때문에 따로 설치할 필요는 없다. 정적인 파일들을 알아서 제공해주어, `fs.readFile`등으로 따로 읽어올 필요가 없는 것이 장점이며, 요청 경로에 파일이 없는 경우 **알아서 next()**를 호출한다. 만약 파일을 발견했다면 다음 미들웨어는 실행하지 않는다.
+
+- 사용
+  ```javascript
+  app.use([REQUEST_PATH], express.static([REAL_PATH]))
+  app.use('/', express.static(path.join(__dirname, 'public')));
+  ```
+
+  함수의 인수에 정적인 파일들이 담겨 있는 폴더를 연결해주면 된다. 위의 예제에 따르면 `./public/css/style.css`파일은 `localhost:3000/css/style.css`로 접근이 가능하다.
+
+**body-parser**
+
+요청의 바디에 있는 데이터를 해석해서 req, body 객체로 만들어주는 미들웨어다. 보통 `form data / AJAX 요청`을 처리한다. 단, 멀티파트(*이미지, 동영상, 파일*)은 처리하지 못하므로 이 경우 **multer**모듈을 사용한다. 역시 내장되어 있어 따로 설치할 필요는 없다.
+
+요청의 본문이 버퍼 데이터일 경우엔, Raw 형식 / 텍스트 형식일 경우에는 Text 형식을 해석할 수 있어야 하는데, 이 경우에는 따로 설치해서 사용해야 한다.
+
+- 설치(Optional) 및 사용
+  ```javascript
+  // 설치
+  npm i body-parser
+  // 설치한 경우 사용
+  const bodyParser = require('body-parser'); 
+  app.use(bodyParser.raw());
+  app.use(bodyParser.text());
+  ```
+
+  
+
+- 사용
+  ```javascript
+  app.use(express.json()); // JSON 데이터 해석
+  // extended true시 노드 내장 모듈인 querystring 아닌 qs 모듈(설치) 사용한다는 의미이다.
+  app.use(express.urlencoded({ extended: false })); // urlencoded(주소 형식) 데이터 해석
+  ```
+
+바디-파서를 사용하면 `POST, PUT` 요청 등에서 필요했던 req.on('data', callback)으로 바디에 데이터를 붙인 후, req.on('end')로 스트림을 사용할 필요없이 내부적으로 스트림을 처리하여 **바로 req.body**에 데이터가 들어간다.
+
+
+
+### next()
+
+핸들러 함수의 next()는 다음 핸들러 혹은, 다음 라우트를 불러올 때 사용한다.
+
+```javascript
+app.[HTTP_METHOD]('/', handler[, handler, ...])
+```
+
+```javascript
+import express from express;
+const app = express();
+app.get('/', (req, res, next) => {
+  console.log('Hello!');
+  next();
+}, (req, res, next) => {
+  console.log('다음 핸들러 함수로 next를 통해 왔습니다.');
+});
+```
+
+이어지는 핸들러 함수가 없다면, 다음 라우트로 이동한다.
+
+```javascript
+app.get('/', (req, res, next) => {
+  console.log('Hello!');
+  next(); // 다음 핸들러 함수가 없다면, 다음 라우트로 이동한다.
+});
+app.get('/', (req, res, next) => {
+  console.log('next 통해 다음 라우트로 왔습니다.');
+});
+```
+
+`route`인수를 추가하면 다음 핸들러 함수로는 가지 않고, 다음 라우트를 불러온다.
+
+```javascript
+app.get('/', (req, res, next) => {
+  console.log('start!');
+  next('route');
+}, (req, res, next) => {
+  console.log('오지 않습니다.');
+});
+
+app.get('/', (req, res, next) => {
+  console.log('여기로 옵니다.');
+});
+```
+
+`next()`를 사용하지 않는 경우, `res.sendFile()`, `res.send()`등으로 사용자에게 응답을 전달해주어야 사용자가 무한로딩에 빠지지 않는다.
+
+
+
+### Express
+
+익스프레스는 Node.js 개발을 위한 웹 프레임워크이다. 요즘은 **디노(Deno)**가 대세로 떠오르고 있지만, 디노도 익스프레스를 베이스로 하여 개발되었으므로 익스프레스를 익혀두면 디노 사용법을 쉽게 익힐 수 있다.
+
+- Package.json 설정
+  ```javascript
+  // package.json
+  {
+    "main": "app.js", // 실행시 최초 진입할 js 파일을 설정한다.
+    "scripts": {
+      "start": "nodemon app"
+    },
+   	"dependencies": {
+      "express": "^4.18.2"
+    },
+    "devDependencies": {
+      "nodemon": "^2.0.20"
+    }
+  }
+  ```
+
+- 선언
+
+  ```javascript
+  // app.js
+  // ES6 이전
+  const express = require('express');
+  const app = express();
+  // 현재 페이지가 ROOT 페이지가 아닌 경우
+  module.exports = {
+    app
+  }
+  
+  // ES6 이후
+  import express from 'express';
+  import path from 'path';
+  import { fileURLToPath } from 'url';
+  
+  const app = express();
+  const __filename = fileURLToPath(import.meta.url);
+  const __dirname = path.dirname(__filename);
+  // 현재 페이지가 ROOT 페이지가 아닌 경우
+  export {
+  	app
+  }
+  export default app;
+  ```
+
+  
+
+- 변수 세팅
+  ```javascript
+  app.set(KEY, VALUE);
+  // sample
+  process.env.PORT = 3000;
+  app.set('port', process.env.PORT || 3000);
+  ```
+
+- REST API
+  ```javascript
+  // GET 요청 예시
+  app.get('/', (req, res) => {
+    // 단순 문자열
+    // res.send('Hello, Express')!
+    // html 페이지. 위치는 package.json에 설정된 최초실행파일 기준
+    res.sendFile(path.join(__dirname, '/index.html'));
+  }
+  ```
+
+- 서버 실행
+  ```javascript
+  app.listen(PORT_NUMBER, callback);
+  // 예시
+  app.listen(app.get('port'), () => {
+    console.log(app.get('port'), '번 포트에서 서버가 실행중입니다.');
+  });
+  ```
+
+  
 
 ## Git
 
@@ -3129,6 +3374,107 @@ Vue3의 data-fetching 방법 중 대표적인 몇 가지를 소개한다.
 - 같은 줄 내 같은 단어 선택 : `CTRL + D`
 - 페이지 내 전체 같은 단어 선택: `CTRL + SHIFT + L`
 - 설정 관련 주소창 `F1` 혹은 `CTRL + SHIFT + P`
+
+
+
+## MySQL
+
+### 설치
+
+```bash
+$ brew install mysql
+$ brew cask install mysqlworkbench # 시각화 도구(콘솔로 진행할 시 불필요)
+```
+
+### 실행 및 보안설정
+
+```bash
+$ brew services start mysql # MySQL 시작
+$ mysql_secure_installation # root 비밀번호 설정
+```
+
+### 접속
+
+```bash
+$ mysql -h localhost -u root -p # root 계정 접속
+```
+
+### DB 생성
+
+```mysql
+# 접속 선행 필수
+# SCHEMA === DATABASE 의미
+CREATE SCHEMA `DB_NAME` DEFAULT CHARACTER SET UTF8MB4; # ; === 입력 완료 및 실행
+```
+
+### DB 확인
+
+```mysql
+mysql>SHOW DATABASES;
+```
+
+### DB 사용
+
+```mysql
+USE [DATABASE_NAME];
+```
+
+### 사용 중인 DB 확인
+
+```mysql
+SELECT DATABASE();
+```
+
+### DB 삭제
+
+```mysql
+DROP DATABASE `DB_NAME`;
+```
+
+### 테이블 생성
+
+```mysql
+# users 테이블 생성
+CREATE TABLE nodejs.users (
+  # id ~ created_at까지 columns 생성 / 각 컬럼 하나는 field라고 칭함.
+  # 정수 / NULL 금지 / 자동 숫자 증가(즉, 아이디 += 1 부여)
+  -> id INT NOT NULL AUTO_INCREMENT, # enter시 자동으로 -> 출력됨.(실행문이 안끝났음을 알림.)
+  # 가변 길이 문자열(0~20) 고정 길이 CHAR() -> 길이 부족시 자동으로 공백 들어감.
+  -> name VARCHAR(20) NOT NULL,
+  # 정수(-2147483648~2147483647) / 음수 무시 
+  -> age INT UNSIGNED NOT NULL,
+  # -128부터 127까지의 정수. 1 또는 0 저장시 boolean
+  -> married TINYINT NOT NULL,
+  # 수백자 넘는 글자
+  -> comment TEXT NULL,
+  # 날짜(DATE) + 시간(TIME) / 현재시간 now() => CURRENT_TIMESTAMP도 같은 동작.
+  -> created_at DATETIME NOT NULL DEFAULT now(),
+  # 기본키. row를 대표하는 고유한 값.
+  -> PRIMARY KEY(id),
+  # 고유해야 하는 값(id 등) / INDEX 명(name_UNIQUE) / (컬럼 오름차순)
+  -> UNIQUE INDEX name_UNIQUE (name ASC))
+  # 테이블에 대한 보충 설명
+  -> COMMENT = '사용자 정보'
+  # 기본 문자열 인코딩
+  -> DEFAULT CHARACTER SET = utf8mb4
+  # 엔진(줄로 MyISAM, InnoDB 사용)
+  -> ENGINE = InnoDB;
+  
+  # 그 외..
+  # ZEROFILL 자릿수 고정. INT(4)에 1 할당시, 빈자리 0 자동입력 => 0001
+```
+
+### TABLE 확인
+
+```mysql
+SHOW TABLES;
+```
+
+### 특정 테이블 SCHEMA 확인
+
+```mysql
+DESC [TABLE_NAME];
+```
 
 
 
