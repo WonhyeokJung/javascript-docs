@@ -2359,6 +2359,37 @@ obj.set('1000', 'X');
 console.log(obj.get('foo'), obj.get('1000'));
 ```
 
+### ?와 !의 사용
+
+- `?`는 프로퍼티가 있다면(즉, if와 같다.) 지정해준 타입을 적용하고 없으면 ` undefined`로 인식한다.
+- `!`는 해당 값이 `null`혹은 `undefined`가 아님을 선언한다.
+
+위 두가지는 구조 분해 할당을 사용할 때 유용하게 사용할 수 있는데 그 예시를 보자.
+
+```typescript
+let foo: Array<{ y?: string, x?: string }> = [{ y: 'abc', x: 'def' }];
+let { y, x } = foo.shift(); // TS2339: Property 'y' does not exist on type '{ y?: string | undefined; x?: string | undefined; } | undefined'
+```
+
+위와 같은 에러가 일어나는 이유는 두가지이다.
+
+1. `y`와 `x`가 `undefined`일 가능성
+2. `foo.shift()`가 `undefined`일 가능성
+
+첫번째는 `?`를 지워줌으로써 해결이 가능하다.
+
+```typescript
+let foo: Array<{ y: string, x: string }> = [{ y: 'abc', x: 'def' }];
+let { y, x } = foo.shift(); // TS2339: Property 'x' does not exist on type '{ y: string; x: string; } | undefined'. (첫번째는 해결이 되었다.)
+```
+
+두번째는 `!`를 이용하여 구조분해할당 대상 객체가 빈 객체가 아님을 명시해주면 된다.
+
+```typescript
+let foo: Array<{ y: string, x: string }> = [{ y: 'abc', x: 'def' }];
+let { y, x } = foo.shift()!; // Error가 사라진다.
+```
+
 
 
 ## Node.js
@@ -3389,7 +3420,8 @@ $ brew cask install mysqlworkbench # 시각화 도구(콘솔로 진행할 시 �
 ### 실행 및 보안설정
 
 ```bash
-$ brew services start mysql # MySQL 시작
+$ brew services [start/restart/stop] mysql # MySQL [시작/재시작/종료]
+$ brew services list # 서비스 리스트
 $ mysql_secure_installation # root 비밀번호 설정
 ```
 
