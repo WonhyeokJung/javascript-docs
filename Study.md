@@ -2861,6 +2861,13 @@ git push -f <REMOTE_NAME> <BRANCH_NAME>
   npm i -D 'PACKAGE_NAME'
   ```
 
+### 전역 패키지 경로
+
+```bash
+/usr/local/bin/lib/node_modules/ # macOS
+```
+
+
 
 ### 구버젼 패키지 확인
 
@@ -3410,11 +3417,13 @@ Vue3의 data-fetching 방법 중 대표적인 몇 가지를 소개한다.
 
 ## MySQL
 
-### 설치
+### 설치 및 저장된 경로
 
 ```bash
 $ brew install mysql
 $ brew cask install mysqlworkbench # 시각화 도구(콘솔로 진행할 시 불필요)
+# 저장경로
+/opt/homebrew/Celler/mysql
 ```
 
 ### 실행 및 보안설정
@@ -3430,6 +3439,14 @@ $ mysql_secure_installation # root 비밀번호 설정
 ```bash
 $ mysql -h localhost -u root -p # root 계정 접속
 ```
+
+### 접속 후 비밀번호 변경
+
+```mysql
+mysql> ALTER user 'root'@'localhost' IDENTIFIED WITH mysql_native_password BY [변경할 비밀번호];
+```
+
+
 
 ### DB 생성
 
@@ -3496,6 +3513,29 @@ CREATE TABLE nodejs.users (
   # ZEROFILL 자릿수 고정. INT(4)에 1 할당시, 빈자리 0 자동입력 => 0001
 ```
 
+```mysql
+# 외래키를 가지는 테이블 comments 예시
+mysql> CREATE TABLE nodejs.comments (
+  -> id INT NOT NULL AUTO_INCREMENT,
+  -> commenter INT NOT NULL, # 댓글 쓴 사용자 아이디
+  -> comment VARCHAR(100) NOT NULL,
+  -> created_at DATETIME NOT NULL DEFAULT now(),
+  -> PRIMARY KEY(id),
+  -> INDEX commenter_idx (commenter ASC),
+  # CONSTRAINT [제약조건명]
+  -> CONSTRAINT commenter
+  # FOREIGN KEY [Field(Column)명]
+  -> FOREIGN KEY (commenter) # commenter field는 외래키로 nodejs.users의 id(댓글작성자 아이디)를 사용할 것임을 선언.
+  # REFERENCES [참고하는 Field(Column)명] => PRIMARY KEY여야 한다.
+  -> REFERENCES nodejs.users (id)
+  # 사용자 정보가 수정되거나 삭제된 경우 연결된 댓글도 삭제(CASCADE)
+  -> ON DELETE CASCADE
+  -> ON UPDATE CASCADE)
+  -> COMMENT = '댓글'
+  -> DEFAULT CHARSET=utf8mb4
+  -> ENGINE=InnoDB;
+```
+
 ### TABLE 확인
 
 ```mysql
@@ -3506,6 +3546,216 @@ SHOW TABLES;
 
 ```mysql
 DESC [TABLE_NAME];
+```
+
+### CRUD
+#### 데이터 생성(Create)
+
+```mysql
+INSERT INTO [테이블명] ([컬럼1], [컬럼2], .. .) VALUES ([값1], [값 2], ...);
+```
+
+```mysql
+mysql> INSERT INTO nodejs.users (name, age, married, comment) VALUES ('foo', 30, 0, 'Hi');
+# 혹은 USE nodejs를 했다면
+mysql> INSERT INTO users (name, age, married, comment) VALUES ('foo', 30, 0, 'Hi');
+# commenter는 기본키를 참조하는 외래키이므로, 기본키 값이 일치하지 않거나 존재하지 않으면 에러가 발생한다.
+mysql> INSERT INTO comments (commenter, comment) VALUES (1, 'foo의 댓글입니다.');
+```
+
+#### 테이블 내 데이터 조회(Read)
+
+```mysql
+SELECT [FIELD(COLUMN)_NAME] FROM [TABLE_NAME] WHERE [CONDITION];
+```
+
+```mysql
+# 예시
+mysql> SELECT name, married FROM users;
+mysql> SELECT * FROM users; # 전체선택
+mysql> SELECT * FROM users WHERE married = true AND age > 30;
+# 나이 오름차순/내림차순 조회 / 출력 행수 설정 / 건너뛸 숫자(페이지네이션 등 활용)
+mysql> SELECT * FROM users ORDER BY age ASC/DESC LIMIT 1 OFFSET 1;
+```
+
+#### 데이터 수정(Update)
+
+```mysql
+UPDATE [TABLE(FIELD)_NAME] SET [COLUMN_NAME = '바꿀 내용'] WHERE [CONDITION];
+```
+
+```mysql
+# 예시
+UPDATE nodejs.users SET comment = '코멘트 내용 변경해봅니다.' WHERE id = 1;
+```
+
+#### 데이터 삭제(Delete)
+
+```mysql
+DELETE FROM [TABLE(COLUMN)_NAME] WHERE [CONDITION]
+```
+
+```mysql
+# 예시
+mysql> DELETE FROM nodejs.users WHERE id = 2; # 위 예시 코멘트 예시에 따라 코멘트가 있는 경우 코멘트도 삭제.
+```
+
+
+
+## MongoDB
+
+### 설치 및 저장경로
+
+```bash
+$ brew tap mongodb/brew
+$ brew install mongodb-community
+# 저장경로
+/opt/homebrew/Celler/mongodb # 원본
+/opt/homebrew/var/mongodb # Data Directory
+/opt/homebrew/etc/mongod.conf # Configuration file(설정용)
+/opt/homebrew/var/log/mongodb # Log directory
+```
+
+### 조회 및 실행
+
+```bash
+$ brew services list # 조회
+$ brew services [start/restart/stop] mongodb-community # 실행/재실행/정지
+$ mongo # < @6.0
+$ mongosh # >= @6.0
+```
+
+### 저장 경로
+
+```bash
+
+```
+
+## Mac
+
+### Homebrew
+
+#### 설치
+
+```bash
+$ /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+
+$ brew install [PACKAGE_NAME] # formulae 설치
+$ brew list # 설치 formulae 리스트
+$ brew uninstall [PACKAGE_NAME] # 삭제
+# Cask
+$ brew install  --cask [APPLICATION_NAME]
+$ brew list --cask # 설치 cask 리스트
+$ brew uninstall --cask [APPLICATION_NAME] # 삭제
+```
+
+#### brew 업데이트
+
+```bash
+$ brew update
+```
+
+#### Formulae와 Cask 차이
+
+- Formulae는 흔히 설치하는 npm 패키지처럼 터미널 인스톨 후 직접 사용할 수 있는 패키지들이다.
+- Cask는 Chrome 등의 GUI 기반 어플리케이션을 brew를 통해 인스톨해서 사용하고자 할 때 사용한다.(dmg 기반 파일을 applications에 드래그앤 드롭해서 이용하기 싫은 경우 이용한다.)
+
+#### 기본 패키지 설치 경로
+
+```bash
+$ /opt/homebrew/Cellar
+```
+
+#### 원하는 패키지를 brew 전체 패키지 목록에서 찾기
+
+```bash
+$ brew search [PACKAGE_NAME]
+```
+
+#### 전역 설치 목록 보기
+
+```bash
+$ brew list
+```
+
+### Keyboard Shortcut
+
+| 기능                  | 단축키                  |
+| --------------------- | ----------------------- |
+| 숨김 폴더 보기/숨기기 | Cmd + Shift + Period(.) |
+
+
+
+### Terminal
+
+#### 숨김파일 보기
+
+```bash
+ls -a
+```
+
+#### 환경 변수 설정
+
+환경 변수는 mac의 경우 **Users/[USER_NAME]/**으로 이동하면 설정파일을 확인할 수 있는데, 그곳을 통해 설정을 진행할 수 있다.
+
+내부에 있는 파일들의 내용을 간략히 알아보자.
+```bash
+node_repl_history	
+Application 
+Support
+.npm
+Applications
+.CFUserTextEncoding
+.npmrc # npm 설정
+Desktop
+.DS_Store
+.nuxtrc
+Documents
+.Trash
+.viminfo
+Downloads
+.bash_history # bash 콘솔에 입력했던 명령어 기록
+.vscode
+Library
+.degit
+.vuerc
+Movies
+.gitconfig # email, name 등 git config로 입력한 정보 저장
+.yarnrc
+Music
+.lesshst
+.zprofile # zsh 설정. 환경변수 설정을 여기에서 진행.
+Pictures
+.mongodb # mongodb 사용 기록
+.zsh_history # zsh 콘솔에 입력했던 명령어 기록
+Public
+.mysql_history # MySQL 콘솔에 입력했던 명령어 기록
+.zsh_sessions
+node_modules
+```
+
+
+
+```bash
+# Users/[USER_NAME]/
+# bash의 경우
+$ chsh -s /bin/bash # 기본 터미널로 bash 설정
+$ vi ~/.bash_profile # 없을 시 파일 생성까지
+# 혹은
+$ vi ~/.bashrc
+
+# zsh
+$ chsh -s /bin/zsh # zsh 기본 터미널 설정
+$ vi ~/.zshrc
+# 혹은
+$ vi ~/.zprofile
+
+# 파일 열기
+$ open [FILE_NAME]
+# 설정 내용 작성 후 :wq로 저장 후 종료.(터미널 입력시)
+$ export PATH="$PATH:[/PATH(경로는 최상위(Macintosh HD) 기준)]" # 명령어(mongo) 등 입력시 명령어의 경로를 설정
+# 설정파일 새로고침
+$ source [FILE_NAME] # ~./zshrc, ~/.bashrc, etc.
 ```
 
 
