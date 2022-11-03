@@ -2478,173 +2478,6 @@ console.log('finish');
    'done'
    ```
 
-
-### Middleware
-
-미들웨어는 요청(req)과 응답(res)의 중간에 위치하여 요청과 응답을 제어하는 역할을 한다. 잘못된 요청이 들어오면 에러를 출력하거나 요청 혹은 응답을 조작하여 보내기도 한다.
-
-미들웨어의 일반적인 사용법은 아래와 같다.
-
-- 미들웨어는 위에서부터 아래로 실행된다.
-- next()가 없으면 다음 미들웨어가 실행되지 않고, 웹페이지가 무한로딩에 빠져 계류한다.
-- 그러므로, next()를 사용하지 않을 경우 res.send() 혹은 res.sendFile() 등으로 응답을 보내야 한다.(예를 들면, express.static 같은 정적 파일을 사용할 경우)
-
-1. `app.use`의 사용
-   가장 일반적인 방식으로 
-   
-   ```javascript
-   // app.use('/PATH(optional)', [middleware, [middleware, ]])식으로 작성하면 된다.
-   // '/PATH'로의 모든 요청(GET, POST, PUT, PATCH, DELETE)에서 실행
-   // '/PATH' 생략시 모든 요청에서 실행
-   app.use((req, res, next) => {
-     console.log('모든 요청에 다 실행됩니다.');
-     next();
-   }, (req, res, next) => {
-     console.log('여기 모든 요청에 이은 다음 요청이 next()를 통해 왔네요. next()를 통해 app.get으로 갈까요?');
-     next();
-   });
-   ```
-   
-2. app.[HTTP METHOD]
-   ```javascript
-   // /PATH로 시작하는 get요청에서 실행
-   // app.get('/PATH', [middleware, [middleware, ...]]) 식으로 작성하며, app.[post, put, patch, delete]()도 같다.
-   app.get('/', (req, res, next) => {
-     console.log('GET / 요청에서만 실행됩니다.');
-     next();
-   }, (req, res) => {
-     throw new Error('에러는 에러 처리 미들웨어로 갑니다.');
-   });
-   ```
-
-3. Errors
-   ```javascript
-   // 에러처리의 경우 4가지의 매개변수를 갖고 있다. 사용하지 않더라도 반드시 작성해야한다.
-   // 별 다른 일이 없는 경우 가장 아래에 있는 것이 좋다.
-   app.use((err, req, res, next) => {
-     console.error(err);
-     res.status(500).send(err.message);
-   });
-   ```
-
-
-
-#### Express에서 자주 사용하는 미들웨어 패키지
-
-**Morgan**
-
-요청과 응답에 대한 정보를 기록해준다.
-
-- 설치 
-
-   `npm install morgan`
-
-- 사용
-
-  ```javascript
-  import morgan from 'morgan';
-  app.use(morgan(ARGUMENTS));
-  // 인수는 'dev', 'combined', 'short', 'tiny', 'common' 등이 있다.
-  ```
-
-- 결과
-  ```bash
-  # console / morgan('dev') 기준
-  GET / 500 7.409 ms – 50
-  [HTTP METHOD] [ADDRESS] [HTTP STATUS CODE] [RESPONSE TIME] [RESPONSE BYTE]
-  ```
-
-**static**
-
-정적인 파일들을 제공하는 라우터 역할을 한다. 기본적으로 제공되기 때문에 따로 설치할 필요는 없다. 정적인 파일들을 알아서 제공해주어, `fs.readFile`등으로 따로 읽어올 필요가 없는 것이 장점이며, 요청 경로에 파일이 없는 경우 **알아서 next()**를 호출한다. 만약 파일을 발견했다면 다음 미들웨어는 실행하지 않는다.
-
-- 사용
-  ```javascript
-  app.use([REQUEST_PATH], express.static([REAL_PATH]))
-  app.use('/', express.static(path.join(__dirname, 'public')));
-  ```
-
-  함수의 인수에 정적인 파일들이 담겨 있는 폴더를 연결해주면 된다. 위의 예제에 따르면 `./public/css/style.css`파일은 `localhost:3000/css/style.css`로 접근이 가능하다.
-
-**body-parser**
-
-요청의 바디에 있는 데이터를 해석해서 req, body 객체로 만들어주는 미들웨어다. 보통 `form data / AJAX 요청`을 처리한다. 단, 멀티파트(*이미지, 동영상, 파일*)은 처리하지 못하므로 이 경우 **multer**모듈을 사용한다. 역시 내장되어 있어 따로 설치할 필요는 없다.
-
-요청의 본문이 버퍼 데이터일 경우엔, Raw 형식 / 텍스트 형식일 경우에는 Text 형식을 해석할 수 있어야 하는데, 이 경우에는 따로 설치해서 사용해야 한다.
-
-- 설치(Optional) 및 사용
-  ```javascript
-  // 설치
-  npm i body-parser
-  // 설치한 경우 사용
-  const bodyParser = require('body-parser'); 
-  app.use(bodyParser.raw());
-  app.use(bodyParser.text());
-  ```
-
-  
-
-- 사용
-  ```javascript
-  app.use(express.json()); // JSON 데이터 해석
-  // extended true시 노드 내장 모듈인 querystring 아닌 qs 모듈(설치) 사용한다는 의미이다.
-  app.use(express.urlencoded({ extended: false })); // urlencoded(주소 형식) 데이터 해석
-  ```
-
-바디-파서를 사용하면 `POST, PUT` 요청 등에서 필요했던 req.on('data', callback)으로 바디에 데이터를 붙인 후, req.on('end')로 스트림을 사용할 필요없이 내부적으로 스트림을 처리하여 **바로 req.body**에 데이터가 들어간다.
-
-
-
-### next()
-
-핸들러 함수의 next()는 다음 핸들러 혹은, 다음 라우트를 불러올 때 사용한다.
-
-```javascript
-app.[HTTP_METHOD]('/', handler[, handler, ...])
-```
-
-```javascript
-import express from express;
-const app = express();
-app.get('/', (req, res, next) => {
-  console.log('Hello!');
-  next();
-}, (req, res, next) => {
-  console.log('다음 핸들러 함수로 next를 통해 왔습니다.');
-});
-```
-
-이어지는 핸들러 함수가 없다면, 다음 라우트로 이동한다.
-
-```javascript
-app.get('/', (req, res, next) => {
-  console.log('Hello!');
-  next(); // 다음 핸들러 함수가 없다면, 다음 라우트로 이동한다.
-});
-app.get('/', (req, res, next) => {
-  console.log('next 통해 다음 라우트로 왔습니다.');
-});
-```
-
-`route`인수를 추가하면 다음 핸들러 함수로는 가지 않고, 다음 라우트를 불러온다.
-
-```javascript
-app.get('/', (req, res, next) => {
-  console.log('start!');
-  next('route');
-}, (req, res, next) => {
-  console.log('오지 않습니다.');
-});
-
-app.get('/', (req, res, next) => {
-  console.log('여기로 옵니다.');
-});
-```
-
-`next()`를 사용하지 않는 경우, `res.sendFile()`, `res.send()`등으로 사용자에게 응답을 전달해주어야 사용자가 무한로딩에 빠지지 않는다.
-
-
-
 ### Express
 
 익스프레스는 Node.js 개발을 위한 웹 프레임워크이다. 요즘은 **디노(Deno)**가 대세로 떠오르고 있지만, 디노도 익스프레스를 베이스로 하여 개발되었으므로 익스프레스를 익혀두면 디노 사용법을 쉽게 익힐 수 있다.
@@ -2723,7 +2556,277 @@ app.get('/', (req, res, next) => {
   });
   ```
 
+#### next()
+
+핸들러 함수의 next()는 다음 핸들러 혹은, 다음 라우트를 불러올 때 사용한다.
+
+```javascript
+app.[HTTP_METHOD]('/', handler[, handler, ...])
+```
+
+```javascript
+import express from express;
+const app = express();
+app.get('/', (req, res, next) => {
+  console.log('Hello!');
+  next();
+}, (req, res, next) => {
+  console.log('다음 핸들러 함수로 next를 통해 왔습니다.');
+});
+```
+
+이어지는 핸들러 함수가 없다면, 다음 라우트로 이동한다.
+
+```javascript
+app.get('/', (req, res, next) => {
+  console.log('Hello!');
+  next(); // 다음 핸들러 함수가 없다면, 다음 라우트로 이동한다.
+});
+app.get('/', (req, res, next) => {
+  console.log('next 통해 다음 라우트로 왔습니다.');
+});
+```
+
+`route`인수를 추가하면 다음 핸들러 함수로는 가지 않고, 다음 라우트를 불러온다.
+
+```javascript
+app.get('/', (req, res, next) => {
+  console.log('start!');
+  next('route');
+}, (req, res, next) => {
+  console.log('오지 않습니다.');
+});
+
+app.get('/', (req, res, next) => {
+  console.log('여기로 옵니다.');
+});
+```
+
+`next()`를 사용하지 않는 경우, `res.sendFile()`, `res.send()`등으로 사용자에게 응답을 전달해주어야 사용자가 무한로딩에 빠지지 않는다.
+
+#### Middleware
+
+미들웨어는 요청(req)과 응답(res)의 중간에 위치하여 요청과 응답을 제어하는 역할을 한다. 잘못된 요청이 들어오면 에러를 출력하거나 요청 혹은 응답을 조작하여 보내기도 한다.
+
+미들웨어의 일반적인 사용법은 아래와 같다.
+
+- 미들웨어는 위에서부터 아래로 실행된다.
+- next()가 없으면 다음 미들웨어가 실행되지 않고, 웹페이지가 무한로딩에 빠져 계류한다.
+- 그러므로, next()를 사용하지 않을 경우 res.send() 혹은 res.sendFile() 등으로 응답을 보내야 한다.(예를 들면, express.static 같은 정적 파일을 사용할 경우)
+
+1. `app.use`의 사용
+   가장 일반적인 방식으로 
+
+   ```javascript
+   // app.use('/PATH(optional)', [middleware, [middleware, ]])식으로 작성하면 된다.
+   // '/PATH'로의 모든 요청(GET, POST, PUT, PATCH, DELETE)에서 실행
+   // '/PATH' 생략시 모든 요청에서 실행
+   app.use((req, res, next) => {
+     console.log('모든 요청에 다 실행됩니다.');
+     next();
+   }, (req, res, next) => {
+     console.log('여기 모든 요청에 이은 다음 요청이 next()를 통해 왔네요. next()를 통해 app.get으로 갈까요?');
+     next();
+   });
+   ```
+
+2. app.[HTTP METHOD]
+
+   ```javascript
+   // /PATH로 시작하는 get요청에서 실행
+   // app.get('/PATH', [middleware, [middleware, ...]]) 식으로 작성하며, app.[post, put, patch, delete]()도 같다.
+   app.get('/', (req, res, next) => {
+     console.log('GET / 요청에서만 실행됩니다.');
+     next();
+   }, (req, res) => {
+     throw new Error('에러는 에러 처리 미들웨어로 갑니다.');
+   });
+   ```
+
+3. Errors
+
+   ```javascript
+   // 에러처리의 경우 4가지의 매개변수를 갖고 있다. 사용하지 않더라도 반드시 작성해야한다.
+   // 별 다른 일이 없는 경우 가장 아래에 있는 것이 좋다.
+   app.use((err, req, res, next) => {
+     console.error(err);
+     res.status(500).send(err.message);
+   });
+   ```
+
+
+
+#### POST 요청과 보안
+
+HTTP Methods 중 하나인 POST 요청시 흔히 **데이터가 숨겨져서 보내진다**라고 알고 있지만, 사실이 아니다. 요청 후 개발자 도구의 Network 탭에서 보낸 요청 주소를 확인해보면,
+
+![httpmethod-post](./assets/httpmethod-post.png)
+
+이처럼 보낸 데이터가 전부 공개되어 있다. 키를 숨겨 보안성을 높이는 것은 **https 프로토콜**을 사용해서 적용한다.
+
+#### Application/JSON 데이터와 form action 받기
+
+POST 요청 등으로 데이터를 보냈다고 가정하자.
+
+```javascript
+const express = require('express');
+const app = express();
+
+app.post('/', (req, res) => {
+  console.log(req.body) // undefined??
+})
+```
+
+분명, 데이터를 보냈고 네트워크 상에 payload에서 확인이 가능함에도 서버 쪽에서 받지 못한다.
+이는 express의 문제인데, express는 기본적으로 JSON 데이터를 받지 못하기 때문이다. 코드를 아래와 같이 수정하면 정상적으로 확인이 가능하다.
+
+```javascript
+const express = require('exprss');
+const app = express();
+
+// 추가
+// req.body에 json 데이터를 해석하여 넣어준다.
+app.use(express.json());
+
+app.post('/', (req, res) => {
+  console.log(req.body) // 정상 출력
+})
+```
+
+Form action으로 데이터를 전송하는 경우는 아래의 코드를 입력하면, 그 데이터를 해석하여 req.body에 반환해준다.
+
+```javascript
+app.use(express.urlencoded({ extended: false }));
+```
+
+
+
+### 자주 사용하는 패키지
+
+Express와 결합하여 자주 사용하는 패키지들을 소개한다.
+
+#### mysql2
+
+```bash
+$ npm install mysql2
+```
+
+MySQL과 Node.js를 연결해주는 컨트롤러 역할의 패키지이다.
+
+#### sequelize
+
+```bash
+$ npm install sequelize
+$ npm install -D sequelize-cli
+$ npx sequelize init
+```
+
+자바스크립트 형식의 코드로 MySQL을 다루게 해주지만 완벽한 대체는 하지 못하여 로직이 깊은 코드를 짜는 경우 MySQL을 사용해야 한다.
+
+#### nodemon
+
+```bash
+$ npm i -D nodemon
+# package.json
+"script": {
+	"dev": "nodemon app.js" # 원래 node app.js
+}
+```
+
+기본적으로 코드를 수정한 경우 서버를 재시작해야 변경 사항이 적용되는데, 개발 중에는 큰 불편함을 야기한다. 이를 실시간 적용해주는 것이 노드몬이다.
+
+#### cors
+
+```bash
+$ npm i cors
+```
+
+CORS(교차 출처 리소스 공유) 문제를 해결하기 위한 라이브러리이다. 보통 프론트와 백엔드 그리고 DB 서버가 구분되어 있는 프로그래밍 서버 구조상 같은 URI가 아닌 다른 URI에서 데이터를 요청하게 되는데, 무분별한 접근을 막기 위해 CORS로 접근을 제한하고 있다.
+
+```javascript
+// 사용 예제
+const express = require('express');
+const cors = require('cors');
+
+const app = express();
+// pre-flight (요청이 진입하기 전에, 보안을 위해 미리 허가된 요청인지 요구하는 경우가 있음. 요청에 헤더 등이 추가됐을 때 등이 있음.)
+app.options([대상주소], cors({ origin: '허가할 출처 주소' }));
+// 전체 주소, 전체 출처(요청) 주소 허용
+app.options('*', cors());
+// 특정
+app.options('/login', cors({ origin: 'http://localhost:3000' }));
+
+// 요청 내 사용
+app.get('/login', cors({ [options] }), (req, res) => { ... });
+```
+
+#### Morgan
+
+요청과 응답에 대한 정보를 기록해준다.
+
+- 설치 
+
+  `npm install morgan`
+
+- 사용
+
+  ```javascript
+  import morgan from 'morgan';
+  app.use(morgan(ARGUMENTS));
+  // 인수는 'dev', 'combined', 'short', 'tiny', 'common' 등이 있다.
+  ```
+
+- 결과
+
+  ```bash
+  # console / morgan('dev') 기준
+  GET / 500 7.409 ms – 50
+  [HTTP METHOD] [ADDRESS] [HTTP STATUS CODE] [RESPONSE TIME] [RESPONSE BYTE]
+  ```
+
+#### static
+
+정적인 파일들을 제공하는 라우터 역할을 한다. 기본적으로 제공되기 때문에 따로 설치할 필요는 없다. 정적인 파일들을 알아서 제공해주어, `fs.readFile`등으로 따로 읽어올 필요가 없는 것이 장점이며, 요청 경로에 파일이 없는 경우 **알아서 next()**를 호출한다. 만약 파일을 발견했다면 다음 미들웨어는 실행하지 않는다.
+
+- 사용
+
+  ```javascript
+  app.use([REQUEST_PATH], express.static([REAL_PATH]))
+  app.use('/', express.static(path.join(__dirname, 'public')));
+  ```
+
+  함수의 인수에 정적인 파일들이 담겨 있는 폴더를 연결해주면 된다. 위의 예제에 따르면 `./public/css/style.css`파일은 `localhost:3000/css/style.css`로 접근이 가능하다.
+
+#### body-parser
+
+요청의 바디에 있는 데이터를 해석해서 req, body 객체로 만들어주는 미들웨어다. 보통 `form data / AJAX 요청`을 처리한다. 단, 멀티파트(*이미지, 동영상, 파일*)은 처리하지 못하므로 이 경우 **multer**모듈을 사용한다. 역시 내장되어 있어 따로 설치할 필요는 없다.
+
+요청의 본문이 버퍼 데이터일 경우엔, Raw 형식 / 텍스트 형식일 경우에는 Text 형식을 해석할 수 있어야 하는데, 이 경우에는 따로 설치해서 사용해야 한다.
+
+- 설치(Optional) 및 사용
+
+  ```javascript
+  // 설치
+  npm i body-parser
+  // 설치한 경우 사용
+  const bodyParser = require('body-parser'); 
+  app.use(bodyParser.raw());
+  app.use(bodyParser.text());
+  ```
+
   
+
+- 사용
+
+  ```javascript
+  app.use(express.json()); // JSON 데이터 해석
+  // extended true시 노드 내장 모듈인 querystring 아닌 qs 모듈(설치) 사용한다는 의미이다.
+  app.use(express.urlencoded({ extended: false })); // urlencoded(주소 형식) 데이터 해석
+  ```
+
+바디-파서를 사용하면 `POST, PUT` 요청 등에서 필요했던 req.on('data', callback)으로 바디에 데이터를 붙인 후, req.on('end')로 스트림을 사용할 필요없이 내부적으로 스트림을 처리하여 **바로 req.body**에 데이터가 들어간다.
+
+
 
 ## Git
 
@@ -3068,6 +3171,10 @@ npm owner ls [package name] # 패키지명 소유자 확인
    ```bash
    npm install <PACKAGE_NAME> // 상위 예시의 경우 vuejs-slider
    ```
+
+### npx?
+
+보통 패키지를 전역이 아닌 프로젝트 별로 관리하는데, 이런 경우 명령어를 전역에서 사용하지 못하는 경우가 있다. 이런 경우를 대비해 `npx [명령어] ...` 형태로 코드를 입력하게 되면 지역에 설치한 패키지의 명령어를 전역에 설치한 것처럼 사용할 수 있게 된다.
 
 ## Vue
 
@@ -3625,13 +3732,121 @@ $ mongo # < @6.0
 $ mongosh # >= @6.0
 ```
 
-### 저장 경로
+### 관리자 계정 설정
 
 ```bash
-
+# MongoDB
+test> use admin # admin 전환
+# root === 모든권한
+db.createUser({ user: '이름', pwd: '비밀번호', roles: ['root'] }) # 계정추가
+# 몽고디비 정지후
+$ vim /opt/homebrew/local/etc/mongod.conf
+# Vim에 추가
+security:
+  authorization: enabled
+# Vim 종료 후
+$ brew services start mongodb-community
+$ mongosh admin -u [이름] -p [비밀번호] # 접속, WonhyeokJung
 ```
 
+### 컴퍼스
+
+몽고디비를 위한 GUI 도구로, 시각화 도구가 필요하지 않으면 사용할 필요는 없다.
+
+### RDBMS와의 용어 비교
+
+| MongoDB    | RDBMS    |
+| ---------- | -------- |
+| Database   | Database |
+| Collection | Table    |
+| Field      | Column   |
+| Document   | Row      |
+|            | Join     |
+
+### DB 생성 및 조회
+
+```
+use [DB_NAME] # 생성
+show dbs # 조회(컬렉션이 없으면 뜨지 않는다.)
+```
+
+### 컬렉션(MySQL의 테이블) 생성 및 조회
+
+컬렉션을 따로 생성하지 않아도 몽고디비에서는 **다큐먼트(데이터, row)**를 삽입할 때  컬렉션이 없다면 컬렉션을 **자동으로 생성**해주지만, 컬렉션 생성이 가능하긴 하다.
+
+```mysql
+db.createCollection('users') # 생성
+db.[COLLECTION_NAME].[insertOne, replaceOne]({ key:value, ... }) # 컬렉션 없을 시 자동 생성
+show collections # 조회
+```
+
+### 다큐먼트(RDBMS의 row) CRUD
+
+> 다큐먼트는 MySQL의 rows 즉, 데이터와 동일한 의미를 가진다.
+
+MongoDB에서는 컬럼(Field)의 정의가 필요없다. 따라서, 자유롭다는 장점이 있지만 무엇이 들어올지 모른다는 단점도 있다.
+
+#### Create(생성)
+
+```mysql
+# 다큐먼트 추가
+> db.[COLLECTION_NAME].[insertOne, replaceOne]({ key:value, key:value, .... });
+# 예시
+> db.[COLLECTION_NAME].[insertOne, replaceOne]({ name: 'foo', age: 32, married: true, comment: '컬렉션 이름이 제멋대로여도 다 들어갑니다..', createdAt: new Date() });
+# 관계 키 설정
+# 1. 유저 조회 (_id 기본값)
+> db.users.find({ name: 'foo' }, { _id: 1 })
+> { "_id" : ObjectId("조회된아이디") } # 조회 결과
+> db.comments.save({ commenter: ObjectId('조회된아이디'), comment: '안녕하세요. 댓글입니다.', createdAt: new Date() });
+```
+
+#### Read(조회)
+
+```mysql
+# 조회(조건/조건에 부합하는 다큐먼트 중 출력할 컬럼값/옵션)
+db.[COLLECTION_NAME].find(query, projections, options);
+# greater than 30(30세 초과), 혼인
+db.comments.find({ age: { $gt:30 }, married: true })
+# 그 외 $gt(초과), $gte(이상), $lt(미만), $lte(이하), $ne(같지 않음), $or(또는), $in(배열 요소 중 하나), $or 등이 있다.
+db.users.find({ $or: [{ age: { $gt: 30 } }, { married: false }] }, { _id: 1, name: 1, age: 0}); # 아이디와 네임은 출력, 나이는 비출력 => Error. 포함과 제외를 혼용할 수 없음.(단, _id만 예외)
+db.users.find({ $or: [{ age: { $gt: 30 } }, { married: false }] }, { _id: 1, name: 0, age: 0}) # 에러없이 잘 나온다.
+# 정렬 1 오름차순, -1 내림차순
+db.users.find({}, { _id: 0, name: 1, age: 1 }).sort({ age: -1 }) # 내림차순
+# 조회할 숫자 설정
+db.users.find({}, { _id: 0, name: 1, age: 1}).sort({ age: -1 }).limit(1);
+# 특정 자료 개수 건너뛰기
+db.users.find({}, { _id: 0, name: 1, age: 1 }).sort({ age: -1 }).limit(1).skip(1)
+```
+
+#### Update(수정)
+
+```mysql
+# 기본 형태
+db.[COLLECTION_NAME].[updateOne, updateMany, bulkWrite]({ 대상 }, { 변경내용 });
+# $set => 일부 필드만 수정하고자 할 때 / 없을 시 통째로 수정
+db.users.[updateOne, updateMany, bulkWrite]({ name: 'foo' }, { $set: { comment: '변경해봅시다.' } });
+```
+
+#### Delete(삭제)
+
+```mysql
+# 기본형
+db.[COLLECTION_NAME].[deleteOne, deleteMany, findOneAndDelete, or bulkWrite.]({ key:value }); # 지우고 싶은 값을 인수로.
+```
+
+
+
 ## Mac
+
+### 업데이트 후 터미널 명령어가 안될 때
+
+git 등의 명령어가 실행되지 않을 경우가 있다. 이 때 터미널에 아래를 입력하여 설치해준다.
+
+```bash
+$ xcode-select --install
+```
+
+
 
 ### Homebrew
 
@@ -3639,7 +3854,11 @@ $ mongosh # >= @6.0
 
 ```bash
 $ /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
-
+# 환경변수 설정
+$ echo 'eval "$(/opt/homebrew/bin/brew shellenv)"' >> /Users/<USER_ID>/.zprofile # 혹은 [>> ~/.zprofile]
+# 설정 후 실행
+$ eval "$(/opt/homebrew/bin/brew shellenv)" # 현재 사용중인 쉘에 브루파일 경로 적용
+# 이후 홈브루 사용 예제
 $ brew install [PACKAGE_NAME] # formulae 설치
 $ brew list # 설치 formulae 리스트
 $ brew uninstall [PACKAGE_NAME] # 삭제
@@ -3661,10 +3880,22 @@ $ brew update
 - Cask는 Chrome 등의 GUI 기반 어플리케이션을 brew를 통해 인스톨해서 사용하고자 할 때 사용한다.(dmg 기반 파일을 applications에 드래그앤 드롭해서 이용하기 싫은 경우 이용한다.)
   애플리케이션을 직접 찾아 이용하기 불편한 점이 있어 비추천한다.
 
-#### 기본 패키지 설치 경로
+#### 기본 패키지 설치 경로 및 기타 저장 경로
 
 ```bash
 $ /opt/homebrew/Cellar
+# 원본
+/usr/local/Celler/ # 과거
+/opt/homebrew/Celler/ # 현재
+# Data Directory
+/usr/local/var/ # 과거
+/opt/homebrew/var/ # 현재
+# Configuration file(설정용)
+/usr/local/etc/ # 과거
+/opt/homebrew/etc/ # 현재
+# Log directory
+/usr/local/var/log/ # 과거
+/opt/homebrew/var/log/ # 현재
 ```
 
 #### 원하는 패키지를 brew 전체 패키지 목록에서 찾기
@@ -3753,13 +3984,34 @@ $ vi ~/.zprofile
 
 # 파일 열기
 $ open [FILE_NAME]
-# 설정 내용 작성 후 :wq로 저장 후 종료.(터미널 입력시)
+# 설정 내용 작성 후 :wq!로 저장 후 종료.(vim 입력시)
+# M1 이전
 $ export PATH="$PATH:[/PATH(경로는 최상위(Macintosh HD) 기준)]" # 명령어(mongo) 등 입력시 명령어의 경로를 설정
+# M1의 경우 export PATH가 작동하지 않을 수 있다. 이 경우는 설정파일에 아래의 코드를 작성한다.
+$ eval "([경로 혹은 정해진 명령어] [사용 shell 등])"
+# 혹은 커맨드 라인에 파일 작성 및 내용 입력까지 한번에 요청할 수 있다.
+# 실행 'eval ~'의 내용을 >> [] 경로의 파일(없을 시 생성)에 작성한다.(예시는 홈브루)
+$ echo 'eval "$(/opt/homebrew/bin/brew shellenv)"' >> /Users/<USER_ID>/.zprofile # [>> ~/.zprofile]도 okay
 # 설정파일 새로고침
 $ source [FILE_NAME] # ~./zshrc, ~/.bashrc, etc.
 ```
 
+### Vim
 
+파일을 작성하거나 열 수 없는 파일의 내용을 변경할 때 이용한다.
+
+```bash
+$ vi ~/[FILE_NAME] # 생성 및 열기 / 현재 위치 기준
+# 혹은
+$ vim /[PATH] # 최상위 폴더(macintosh hd) 기준
+```
+
+vim으로 이동한 후 사용할 수 있는 명령어는 아래와 같다.
+
+- `a`: 입력 모드(파일 내 내용 입력)
+- `esc`: 명령어 모드
+  - `:qa` 종료
+  - `:wq!`저장 후 종료
 
 ## 추천사이트
 
