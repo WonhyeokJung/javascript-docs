@@ -2690,6 +2690,7 @@ app.use(express.json());
 
 app.post('/', (req, res) => {
   console.log(req.body) // 정상 출력
+  res.status(201).json(data) // 함수 내부에서 데이터를 가져와 json으로 보낼 때
 })
 ```
 
@@ -2718,10 +2719,226 @@ MySQL과 Node.js를 연결해주는 컨트롤러 역할의 패키지이다.
 ```bash
 $ npm install sequelize
 $ npm install -D sequelize-cli
-$ npx sequelize init
+$ npx sequelize init # models, config, migrations 등 생성
+```
+
+그리고 자신의 DB와 일치하는 라이브러리를 선택해서 깔아준다.
+
+```bash
+# One of the following:
+$ npm install --save pg pg-hstore # Postgres
+$ npm install --save mysql2
+$ npm install --save mariadb
+$ npm install --save sqlite3
+$ npm install --save tedious # Microsoft SQL Server
+$ npm install --save oracledb # Oracle Database
 ```
 
 자바스크립트 형식의 코드로 MySQL을 다루게 해주지만 완벽한 대체는 하지 못하여 로직이 깊은 코드를 짜는 경우 MySQL을 사용해야 한다.
+
+```json
+// config/config.json
+{
+  "development": {
+    "username": "root",
+    "password": "ROOT_PASSWORD",
+    "database": "DB_NAME", // 원하는 db명
+    "host": "127.0.0.1", // localhost
+    "dialect": "mysql" // 사용 DB
+  },
+  "test": {
+    "username": "root",
+    "password": null,
+    "database": "database_test",
+    "host": "127.0.0.1",
+    "dialect": "mysql"
+  },
+  "production": {
+    "username": "root",
+    "password": null,
+    "database": "database_production",
+    "host": "127.0.0.1",
+    "dialect": "mysql"
+  }
+}
+```
+
+```javascript
+// models/index.js
+// 기본 인덱스 아래와 같이 수정
+const Sequelize = require('sequelize');
+const env = process.env.NODE_ENV || 'development';
+const config = require(__dirname + '/../config/config.json')[env];
+const db = {};
+
+const sequelize = new Sequelize(config.database, config.username, config.password, config);
+
+// user db 사용
+db.User = require('./user')(sequelize, Sequelize);
+
+Object.keys(db).forEach(modelName => {
+  if (db[modelName].associate) {
+    db[modelName].associate(db);
+  }
+});
+
+db.sequelize = sequelize;
+db.Sequelize = Sequelize;
+
+module.exports = db;
+```
+
+```javascript
+// user db 예시
+// models/user.js
+module.exports = (sequelize, DataTypes) => {
+  const User = sequelize.define('User', {
+    email: {
+      type: DataTypes.STRING(40),
+      allowNull: false,
+      unique: true, // 중복금지
+    },
+    nickname: {
+      type: DataTypes.STRING(20),
+      allowNull: false,
+    },
+    password: {
+      type: DataTypes.STRING(100),
+      allowNull: false,
+    }
+  }, { // id, createdAt, updatedAt 자동 추가됨.
+    charset: 'utf8mb4',
+    collate: 'utf8mb4_general_ci', // 한글 저장
+  });
+
+  User.associate = (db) => {
+
+  };
+  return User;
+}
+```
+
+
+
+##### Row CRUD
+
+```javascript
+app.post('/user', async (req, res, next) => {
+  try {
+    // create
+    const newUser = db.[DB_NAME].create({
+      id: req.body.id,
+      password: req.body.password
+    });
+    // read
+    const exUser = await db.User.findOne({
+      // where 안쓰면 부분 집합도 다 조회된다.
+      where: {
+        id: req.body.id,
+      }
+    });
+    if (exUser) {
+      return res.status(403).json({
+        errorCode: 1, // 커스텀 에러코드. 에러코드의 의미를 더 상세하게 쓰기 위해 사용.
+        message: '이미 존재하는 이메일입니다.'
+      })
+    }
+  } catch(err) {
+    ...
+  }
+});
+```
+
+##### 마이그레이션(Migration)
+
+sequelize에선 테이블 스키마가 업데이트되거나 새로운 컬럼 등을 추가해서 model가 변경되면, 마이그레이션을 통해 업데이트 해주어야 하는데 개발 과정에선 업데이트 없이 모든 데이터를 날리고 다시 테이블을 생성하는 방법이 있다.
+
+```javascript
+// app.js
+const db = require('./models');
+db.sequelize.sync({ force: true }); // 서버 재시작시 모든 데이터를 지우고 새로 생성
+```
+
+하지만, 이미 배포중인 서비스라면 모든 DB를 날릴 수는 없다. 그럴 때 사용하는 것이 마이그레이션이다.
+
+```javascript
+// models/user.js
+// 추가하고 싶은 내용을 먼저 작성한다.
+module.exports = (sequelize, DataTypes) => {
+  const User = sequelize.define('User', {
+    email: {
+      type: DataTypes.STRING(40),
+      allowNull: false,
+      unique: true, // 1. 유니크키를 추가한다고 가정하자.
+    },
+    nickname: {
+      type: DataTypes.STRING(20),
+      allowNull: false,
+    },
+    password: {
+      type: DataTypes.STRING(100),
+      allowNull: false,
+    }
+  }, { // id, createdAt, updatedAt 자동 추가됨.
+    charset: 'utf8mb4',
+    collate: 'utf8mb4_general_ci', // 한글 저장
+  });
+
+  User.associate = (db) => {
+
+  };
+  return User;
+}
+```
+
+다음으로, 마이그레이션 파일을 생성한다.
+
+```bash
+$ npx sequelize migration:create --name [MIGRATION_FILE_NAME]
+```
+
+```javascript
+// migrations/[DATE_TIME_NOW]-[MIGRATION_FILE_NAME].js
+'use strict';
+
+/** @type {import('sequelize-cli').Migration} */
+module.exports = {
+  async up (queryInterface, Sequelize) {
+    // 올릴 것을 작성하고
+  },
+
+  async down (queryInterface, Sequelize) {
+    // 내릴 것을 작성한다.
+  }
+};
+```
+
+- CRUD 예시
+  ```javascript
+  'use strict';
+  
+  module.exports = {
+    async up(queryInterface, Sequelize) {
+      // update
+      await queryInterface.changeColumn('Users', 'email', {
+        type: Sequelize.DataTypes.STRING(40),
+        allowNull: false,
+        unique: true,
+      });
+    }
+  }
+  ```
+
+이후, 마이그레이션을 적용한다.
+
+```bash
+# 선작성 선 마이그레이트 됨에 유의한다.
+$ npx sequelize db:migrate --debug # 문제 발생시 상세 내용을 디버깅
+$ npx sequelize db:migrate:undo # 최근 마이그레이트 취소
+$ npx sequelize db:migrate:undo:all # 전부 취소
+```
+
+
 
 #### nodemon
 
@@ -2825,6 +3042,37 @@ app.get('/login', cors({ [options] }), (req, res) => { ... });
   ```
 
 바디-파서를 사용하면 `POST, PUT` 요청 등에서 필요했던 req.on('data', callback)으로 바디에 데이터를 붙인 후, req.on('end')로 스트림을 사용할 필요없이 내부적으로 스트림을 처리하여 **바로 req.body**에 데이터가 들어간다.
+
+#### 비밀번호 암호화
+
+많은 방법이 있지만 대표적으로 `bcrypt, scrypt, pbkdf2` 등이 있다. 여기서는 bcrypt를 예시로 들어본다.
+참고로, 프런트에서부터의 암호화를 하고 싶다면 `bcrypt-js`를 사용하거나, `https`적용으로 해결할 수 있다.
+
+```bash
+# 설치
+$ npm install bcrypt
+```
+
+```javascript
+// app.js
+const bcrpyt = require('bcrypt');
+
+app.post('/user', async (req, res, next) => {
+  try {
+    // 요청의 데이터 body에 포함.
+    const hash = await bcrypt.hash(req.body.password, 12);
+    const newUser = await db.User.create({
+      email: req.body.email,
+      password: hash, // 암호화 전송
+      nickname: req.body.nickname,
+    })
+  } catch(err) {
+    ...
+  }
+});
+
+// 일치 확인
+```
 
 
 
