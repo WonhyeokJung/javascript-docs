@@ -10,7 +10,9 @@
 
 ## 기재된 기술
 
-<img src="https://img.shields.io/badge/-PHP-yellow?logo=PHP&logoColor=#777BB4"> <img src="https://img.shields.io/badge/-Laravel-critical?logo=LARAVEL&logoColor=white"> <img src="https://img.shields.io/badge/-Bootstrap-blueviolet?logo=Bootstrap&logoColor=white"> <img src="https://img.shields.io/badge/-jQuery-important?logo=jQuery&logoColor=white"> <img src="https://img.shields.io/badge/-JavaScript-green?logo=JavaScript&logoColor=white"> <img src="https://img.shields.io/badge/-HTML5-blue?logo=HTML5&logoColor=white"> <a href="https://developer.mozilla.org/ko/docs/Learn/Getting_started_with_the_web/CSS_basics"><img src="https://img.shields.io/badge/-CSS3-gray?logo=CSS3&logoColor=white"></a> <img src="https://img.shields.io/badge/-Python-white?logo=Python&logoColor=blue"> <img src="https://img.shields.io/badge/-Vue.js-red?logo=Vue.js">
+  <img src="https://img.shields.io/badge/Framework-Bootstrap-blueviolet?logo=Bootstrap&logoColor=white"> <img src="https://img.shields.io/badge/-jQuery-important?logo=jQuery&logoColor=white"> <img src="https://img.shields.io/badge/Language-JavaScript-green?logo=JavaScript&logoColor=white"> <img src="https://img.shields.io/badge/Language-HTML5-blue?logo=HTML5&logoColor=white"> <a href="https://developer.mozilla.org/ko/docs/Learn/Getting_started_with_the_web/CSS_basics"><img src="https://img.shields.io/badge/StyleSheet-CSS3-lightgray?logo=CSS3&logoColor=white"></a> <img src="https://img.shields.io/badge/Language-Python-white?logo=Python&logoColor=blue"> <img src="https://img.shields.io/badge/Framework-Vue.js-green?logo=Vue.js"><img src="https://img.shields.io/badge/Tools-Github-blue?logo=github"><img src="https://img.shields.io/badge/Language-TypeScript-red?logo=typescript"><img src="https://img.shields.io/badge/Runtime-node.js-red?logo=node.js">
+
+netlify, npm, postman, gitlab, docker, tailwind, mysql, mongodb, react
 
 ## Markdown
 
@@ -2278,6 +2280,114 @@ const arr:Array<any> = new Array(length:number).fill().map(() => ({
 
 ## TypeScript
 
+### 프로젝트 기본 설정
+
+타입스크립트는 기본적으로 자바스크립트에 기초하기 때문에, 자바스크립트의 변환이 필요하다. 이런 경우 기본적으로 필요한 설정을 알아보자.
+
+#### package.json 생성
+
+```bash
+# 프로젝트 폴더 내 package.json 생성
+$ npm init
+```
+
+```json
+// package.json
+{
+  "name": "test",
+  "version": "1.0.0",
+  "description": "test",
+  "main": "src/app.ts", // 패키지 실행시 시작파일을 설정한다. 예를 들면 누군가 내 모듈을 설치하고 require('test')를 한 경우, main에 지정한 module.exports가 반환된다. 즉, 모듈 내 모든 모듈의 시작점이다.
+  "scripts": { // npm run test 등 스크립트별 실행할 명령어의 내용을 설정한다.
+    "build": "tsc" // ts 파일 빌드
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "push": "git pull origin master && git add . && git commit -m \'test\' && git push origin master" // git push 예시
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https:~.git"
+  },
+  "author": "WonhyeokJung",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/WonhyeokJung/[REPO]/issues"
+  },
+  "homepage": "https://~/#README",
+  "dependencies": { // 의존성 모듈. 모듈은 모듈을 가질 수 있는 것이 노드 모듈의 특징이다.
+  }
+}
+```
+
+2. 의존성 모듈을 설치한다.
+
+```bash
+$ npm install typescript # Compiler 설치(tsc 명령어로 js로의 compile이 가능해진다.)
+$ npm install -D ts-node # ts 파일을 바로 컴파일하여 실행하게 해줌
+$ npm install @types/node # node에 사용되는 ts의 타입 정의를 가져온다.
+```
+
+3. package.json이 있는 root folder 혹은 root folder 내의 필요한 위치에 tsconfig.json을 생성
+
+```json
+// tsconfig.json
+{
+  "include": [], // 포함할 파일과 경로
+  "exclude": [], // 제외할 파일과 경로
+  "compilerOptions": { // 아주 다양하니 찾아볼것
+    "target": "ES2021", // ES2021을 타켓으로 한 컴파일을 한다. 구 브라우저도 읽을 수 있는 es5설정 등을 사용할 수도 있다. 타켓에 맞게 언어가 변환되어 반환된다.(let이 없는 등)
+    "lib": ["ES2021"], // 현재 내가 작성한 코드를 읽을 수 있는 라이브러리를 선택
+    
+    "module": "commonjs", // commonjs, esmodule 등이 있다. js에 require로 반환할 건지, import로 반환할건지 결정해준다
+    "rootDir": "./src", // 원하는 루트 폴더
+    "outDir": "dist", // 컴파일된 파일 저장 루트. 설정 안할 시 .js 파일 옆에 생성
+    "declaration": "true" // d.ts 파일 생성
+    "esModuleInterop": true, // commonjs가 import를 쉽게 하게 해준다.
+    "forceConsistentCasingInFileNames": true, // Ensure that casing is correct in imports.
+    "strict": true, // 엄격한 타입체크 옵션을 전부 true로 한다.
+    "noImplicitAny": true, // any type이 암시되면 에러를 일으킴
+  }
+}
+```
+
+다음과 같이 커맨드 라인에 옵션을 주어 tsconfig.json 파일을 생성할 수도 있다.
+
+```bash
+$ tsc --init --rootDir src --outDir ./bin --esModuleInterop --lib ES2015 --module commonjs --noImplicitAny true
+$ npx tsc --init --rootDir src --outDir ./bin --esModuleInterop --lib ES2015 --module commonjs --noImplicitAny true # typescript 설치 안한경우 npx 이용
+```
+
+json 식으로 파일을 생성하지 않은 경우, json 형식으로 내용을 확인하려면 아래의 커맨드를 입력하면 된다.
+
+```bash
+$ tsc [COMPILING_FILE_NAME] --target es6 --module commonjs --showConfig 
+```
+
+4. 설정한 소스폴더와 출력폴더 생성
+
+```bash
+$ mkdir src
+$ mkdir dist # 사실 안해도 outdir은 자동생성된다.
+```
+
+5. `tsconfig.json` 이 있는 경로에서 컴파일 실행
+
+```bash
+$ tsc
+# 혹은
+$ tsc [FILE_PATH]/[FILE_NAME].ts
+```
+
+6. 생성된 js 파일 실행
+
+```bash
+$ node [FILE_PATH]/[FILE_NAME].js
+# 혹은
+$ ts-node [FILE_PATH]/[FILE_NAME].js
+$ npx ts-node [FILE_PATH]/[FILE_NAME].js
+```
+
+
+
 ### Non-null assertion operator
 
 변수 뒤에 `!`을 붙여 null 혹은 Undefined가 아님을 확신한다.
@@ -2989,7 +3099,7 @@ app.get('/login', cors({ [options] }), (req, res) => { ... });
 
   ```javascript
   import morgan from 'morgan';
-  app.use(morgan(ARGUMENTS));
+  app.use(morgan([ARGUMENTS]));
   // 인수는 'dev', 'combined', 'short', 'tiny', 'common' 등이 있다.
   ```
 
@@ -3016,7 +3126,7 @@ app.get('/login', cors({ [options] }), (req, res) => { ... });
 
 #### body-parser
 
-요청의 바디에 있는 데이터를 해석해서 req, body 객체로 만들어주는 미들웨어다. 보통 `form data / AJAX 요청`을 처리한다. 단, 멀티파트(*이미지, 동영상, 파일*)은 처리하지 못하므로 이 경우 **multer**모듈을 사용한다. 역시 내장되어 있어 따로 설치할 필요는 없다.
+요청의 바디(req.body)에 있는 데이터를 해석해서 추출해주는 미들웨어다. 보통 `form data / AJAX 요청`을 처리한다. 기본적으로 **내장되어 있는 express.json()**등이 있어 설치가 필수는 아니다. 단, 멀티파트(*이미지, 동영상, 파일*)은 처리하지 못하므로 이 경우 **multer**모듈을 사용한다. 역시 내장되어 있어 따로 설치할 필요는 없다.
 
 요청의 본문이 버퍼 데이터일 경우엔, Raw 형식 / 텍스트 형식일 경우에는 Text 형식을 해석할 수 있어야 하는데, 이 경우에는 따로 설치해서 사용해야 한다.
 
@@ -3025,7 +3135,7 @@ app.get('/login', cors({ [options] }), (req, res) => { ... });
   ```javascript
   // 설치
   npm i body-parser
-  // 설치한 경우 사용
+  // 설치가 필요한 데이터 타입의 경우
   const bodyParser = require('body-parser'); 
   app.use(bodyParser.raw());
   app.use(bodyParser.text());
@@ -3033,7 +3143,7 @@ app.get('/login', cors({ [options] }), (req, res) => { ... });
 
   
 
-- 사용
+- 사용(내장모듈)
 
   ```javascript
   app.use(express.json()); // JSON 데이터 해석
@@ -3042,6 +3152,10 @@ app.get('/login', cors({ [options] }), (req, res) => { ... });
   ```
 
 바디-파서를 사용하면 `POST, PUT` 요청 등에서 필요했던 req.on('data', callback)으로 바디에 데이터를 붙인 후, req.on('end')로 스트림을 사용할 필요없이 내부적으로 스트림을 처리하여 **바로 req.body**에 데이터가 들어간다.
+
+#### passport
+
+패스포트는 세션 스토리지 등을 이용하여 인증정보를 저장하거나 사용자 인증 요청을 처리하는 라이브러리이다. 플러그인 형태로 구성되어 있어 특정 로그인 방식에 맞춰 여러 플러그인을 받아 사용할 수 있다.
 
 #### 비밀번호 암호화
 
@@ -3423,6 +3537,72 @@ npm owner ls [package name] # 패키지명 소유자 확인
 ### npx?
 
 보통 패키지를 전역이 아닌 프로젝트 별로 관리하는데, 이런 경우 명령어를 전역에서 사용하지 못하는 경우가 있다. 이런 경우를 대비해 `npx [명령어] ...` 형태로 코드를 입력하게 되면 지역에 설치한 패키지의 명령어를 전역에 설치한 것처럼 사용할 수 있게 된다.
+
+### Github Actions 이용한 CI/CD 자동화
+
+프로젝트가 커질수록 빌드와 배포가 오래 걸리는데, github actions를 이용하면 일종의 github 가상머신 내에서 자동으로 빌드와 배포를 구축할 수 있다. 아래의 예시는 간단하게 README.md 파일을 업데이트하는 예시이다.
+
+1. 먼저 github repo에 들어가 **actions** 항목에서 yml 파일을 작성한다.
+
+```yaml
+# main.yml 명칭은 목적에 맞게 자유롭게 수정한다.
+name: Update Readme
+on: # pull, push 조건에 맞게 발생시 jobs 실행
+  push:
+    branches:
+      - master
+  pull_request:
+  	branches:
+  		- master
+# on: [push]
+jobs:
+  build:
+    runs-on: ubuntu-latest # 가상머신 환경
+    steps: # 실행순서
+      - uses: actions/checkout@master # 해당 레포에 접근할 수 있는 action
+      # 특정 노드 버젼 설치, 필수는 아니며 없이도 npm 사용은 여전히 가능하다.
+      - name: Use Node.js 16.x
+        uses: actions/setup-node@v3
+        with:
+          node-version: 16.x
+          cache: npm # npm, pnpm, yarn 등에서 선택 가능
+      - run: npm ci # npm install과 달리 node_modules를 쓰지 않음. 다만 package_lock.json을 이용
+      - name: Compile .ts file
+        run: | # npx의 사용도 가능하다. 혹은 패키지로 typescript 설치 후 그냥 tsc도 가능하다.
+          npx tsc
+      - name: Update README.md
+        run: |
+          node tsBuild/update-readme.js
+      - name: commit
+        run: |
+        # 여러개의 커맨드 실행도 가능하다.
+          git add .
+          git config --global user.name 'WonhyeokJung'
+          git config --global user.email 'wonhyeok.contact@gmail.com'
+          git commit -m '[docs] auto-update README.md'
+      - name: push
+        run: |
+          git push
+          
+
+```
+
+빌드가 필요한 경우, `Update README.md`부터를 아래의 코드처럼 구성해주면 된다.
+
+```yaml
+- run: npm run build
+- name: deploy
+	run: |
+		deploy 명령어 실행..
+```
+
+
+
+### npm ci / npm install
+
+npm install은 package_lock.json 파일을 생성하고, package.json 파일을 변경하면서 node_modules에 패키지들을 설치한다.
+
+npm ci는 **package_lock.json** 파일을 참조하여 패키지를 설치하고 version 매칭에만 package.json을 활용한다. 따라서, `node_modules/`를 사용하지 않는 CI/CD 환경에서는 npm ci가 더 적합하며, 빠른 속도를 기대할 수 있다.
 
 ## Vue
 
