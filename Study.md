@@ -5017,6 +5017,50 @@ vim으로 이동한 후 사용할 수 있는 명령어는 아래와 같다.
 
 피니아는 이해하기 쉬운 Store를 표방하며 나온 Vuex의 대안책이며 Vue.js 개발자가 공식으로 개발하는 Store입니다.
 
+### 설치
+
+```bash
+# vue create [ProjectName] 완료 후
+$ yarn add pinia
+# or with npm
+$ npm install pinia
+```
+
+### 적용
+
+```javascript
+// Vue 3, main.js
+import { createApp } from 'vue'
+import App from './App.vue'
+import router from './router'
+import store from './store'
+import { createPinia } from 'pinia'
+
+// createPinia의 경우, 반드시 router 호출 다음에 이루어져야 함에 유의한다.
+createApp(App).use(store).use(router).use(createPinia()).mount('#app')
+
+```
+
+좀 더 구분이 잘 가는 적용을 하고 싶다면, 이와 같이 변수에 할당한다면 더 깔끔하게 볼 수 있다.
+
+```javascript
+import { createApp } from 'vue'
+import { createPinia } from 'pinia'
+import App from './App.vue'
+import router from './router'
+import store from './store'
+
+const pinia = createPinia()
+const app = createApp(App)
+
+app.use(store)
+app.use(router)
+app.use(pinia)
+app.mount('#app')
+```
+
+
+
 
 
 ## 추천사이트
