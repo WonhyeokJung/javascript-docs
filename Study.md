@@ -28,7 +28,7 @@ Link의 경우 기본적으로 이렇게 연결한다.
 ```markdown
 ## 목차
 1. [목차](#목차)
-2. [안녕하세요? 반갑습니다.](#안녕하세요?)
+2. [안녕하세요? 반갑습니다.](#안녕하세요?-반갑습니다.)
 ## 안녕하세요? 반갑습니다.
 - 이하 [주소](https://www.google.com)를 참조하세요.
 ```
@@ -56,7 +56,18 @@ Link의 경우 기본적으로 이렇게 연결한다.
 
 ### Escape Sequence
 
-HTML 상에서는 특수문자가 제대로 나타나지 않는 경우가 있다. 그런 경우를 대비하여 이스케이프 문자를 제공한다.
+`\n` , `\t`
+
+### 아스키 코드를 이용한 HTML 특수문자
+
+HTML 상에서는 특수문자가 제대로 나타나지 않는 경우가 있다. 그런 경우를 대비하여 아스키 코드를 이용한 HTML 특수문자를 제공한다. 
+
+```html
+<!-- 예시 -->
+<p class="text_indent0px font_size0_8em line_height1_325 margin_bottom1px margin_left0px margin_right0px sans_serif floatleft">E<span class="small_caps">VELYNE</span>&#9;</p>
+```
+
+
 
 | 표현 문자 | 숫자 표현   | 문자 표현 | 설명          |
 | --------- | ----------- | --------- | ------------- |
@@ -259,7 +270,7 @@ HTML 상에서는 특수문자가 제대로 나타나지 않는 경우가 있다
 }
 ```
 
-위처럼 `filter`에서 사이즈 변경을 하도록 지정해주면 사파리에서도 위와 같은 문제 없이 잘 사용할 수 있다.
+위처럼 `filter` 프로퍼티에서 사이즈 변경을 하도록 지정해주면 사파리에서도 위와 같은 문제 없이 잘 사용할 수 있다.
 
 다만 `filter`는 치명적인 단점이 있는데 성능을 크게 저하시킬 수 있다는 문제점이 있다는 것이다. 따라서 많은 곳에 남발하는 것은 금물이고, 더이상 필요없는 경우 JavaScript 등을 이용하여 제거해 주는 것이 좋다.
 
@@ -272,7 +283,34 @@ function removeHint() {
 
 항상 정답은 사파리 사용을 막고 크롬을 사용하게 하는 것임을 명심하자.
 
+#### 크롬과 사파리의 fixed / body 바깥으로의 scroll 차이점 문제
 
+상단에 navbar를 `position: fixed`로 주고 크롬과 사파리에서 각각 실행해보면, 크롬은 스크롤을 최상단에서 off the body로 스크롤을 더 올리면 fixed는 여전히 고정되고 body만 움직이지만, 사파리에선 **fixed가 같이 움직여** 상단이 노출되는 현상을 볼 수 있다. 이럴 때 사용할 수 있는 css 기술이 있다.
+
+**top이 height 절대값보다 1px 작아야 제대로 적용됨에 주의**하자.
+
+1. HTML에 가짜 div 삽입
+   ```html
+   <html>
+     <body>
+       <div style="height:1000px; background:#00BD9C; margin-top:-999px; position:fixed; width:100%;" />
+     </body>
+   </html>
+   ```
+
+2. css에 적용
+   ```css
+   html:before {
+     content: '';
+     position: fixed;
+     width: 100%;
+     height: 999px;
+     top: -998px;
+     background-color: #F7AF05;
+   }
+   ```
+
+   
 
 ### Selector
 
@@ -596,7 +634,20 @@ div {
    }
    ```
 
-   
+
+### 중복 스크롤 방지(스크롤체이닝 방지)
+
+페이지 내에 스크롤을 가진 요소가 여러개일때 하나의 스크롤이 끝나면 상위 요소의 스크롤을 내부에서 작동시키는 체이닝 현상이 발생할 수 있다. 이를 방지하기 위해 사용한다.(각 요소에서 자기 요소만 스크롤할 수 있게 한다.)
+
+```css
+body {
+  overscroll-behavior-y: auto; /* default */
+	overscroll-behavior-y: contain;
+  overscroll-behavior-y: none;
+}
+```
+
+
 
 ## JavaScript
 
@@ -1410,7 +1461,7 @@ function (x, y) {
 bar(); // ReferenceError: bar is not defined
 ```
 
-### 함수 정의
+#### 함수 정의
 
 1. 함수 선언문(function declaration)
    ```javascript
@@ -2359,7 +2410,7 @@ $ npx tsc --init --rootDir src --outDir ./bin --esModuleInterop --lib ES2015 --m
 json 식으로 파일을 생성하지 않은 경우, json 형식으로 내용을 확인하려면 아래의 커맨드를 입력하면 된다.
 
 ```bash
-$ tsc [COMPILING_FILE_NAME] --target es6 --module commonjs --showConfig 
+$ tsc [COMPILING_FILE_NAME] --target es6 --module commonjs --showConfig # showconfig로 확인
 ```
 
 4. 설정한 소스폴더와 출력폴더 생성
@@ -2374,7 +2425,7 @@ $ mkdir dist # 사실 안해도 outdir은 자동생성된다.
 ```bash
 $ tsc
 # 혹은
-$ tsc [FILE_PATH]/[FILE_NAME].ts
+$ tsc [FILE_PATH]/[FILE_NAME].ts # 특정파일 컴파일
 ```
 
 6. 생성된 js 파일 실행
@@ -2764,6 +2815,50 @@ app.get('/', (req, res, next) => {
    });
    ```
 
+#### routes
+
+##### routes 접속 전 middleware 직접 생성
+
+기존의 미들웨어를 사용할 땐 아래와 같은 방식으로 했다.
+
+```javascript
+const express = require('express');
+const app = express();
+app.use(...); // middleware 사용
+```
+
+routes에 접속하기 전에 로그인 여부 같은 것을 검증해주는(해당 라우터에 입장할 권한이 있는 지 체크) middleware를 직접 생성하는 것도 가능하다. 아래의 예시를 보자.
+
+```javascript
+// routes/middlewares.js
+exports.isLoggedIn = (req, res, next) => { // middleware들은 사실 내부적으로 (req, res, next) => { ... }의 구조를 취하고 있다.
+  
+};
+
+exports.isNotLoggedIn = (req, res, next) => { 
+  ... 
+};
+  
+// 혹은
+module.exports = {
+  isLoggedIn: () => {},
+  isNotLoggedIn: () => {}
+}
+// 로 설정한다. 우선권은 항상 module.exports가 높다.
+```
+
+```javascript
+// routes/post.js
+// HTML 요청 METHODS 내부에 넣으면 미들웨어로서 동작한다.()
+const express = require('express');
+const router = express.Router();
+const { isLoggedIn } = require('./middlewares');
+
+router.post('/', isLoggedIn, (req, res) => { // POST /post/
+
+});
+```
+
 
 
 #### POST 요청과 보안
@@ -2826,6 +2921,8 @@ MySQL과 Node.js를 연결해주는 컨트롤러 역할의 패키지이다.
 
 #### sequelize
 
+##### 기본 설정
+
 ```bash
 $ npm install sequelize
 $ npm install -D sequelize-cli
@@ -2883,7 +2980,7 @@ const db = {};
 
 const sequelize = new Sequelize(config.database, config.username, config.password, config);
 
-// user db 사용
+// DB 연결
 db.User = require('./user')(sequelize, Sequelize);
 
 Object.keys(db).forEach(modelName => {
@@ -2902,7 +2999,7 @@ module.exports = db;
 // user db 예시
 // models/user.js
 module.exports = (sequelize, DataTypes) => {
-  const User = sequelize.define('User', {
+  const User = sequelize.define('User', { // table명은 users가 된다.(lowercase + 's')
     email: {
       type: DataTypes.STRING(40),
       allowNull: false,
@@ -2917,18 +3014,56 @@ module.exports = (sequelize, DataTypes) => {
       allowNull: false,
     }
   }, { // id, createdAt, updatedAt 자동 추가됨.
-    charset: 'utf8mb4',
+    charset: 'utf8mb4', // 이모티콘 허용 + 현재 utf8 사용시 표준이 utf8mb4로 적용.
     collate: 'utf8mb4_general_ci', // 한글 저장
   });
-
+	// 관계 정의
   User.associate = (db) => {
-
+    // 1:N relationship Parent table
+    db.User.hasMany(db.Post); // hasMany는 추가되는 건 없지만 자신이 외래키로 들어가 있는 곳에서 로우를 가져올 수 있음.(즉, 양방향 불러오기를 가능하게 함.)
   };
   return User;
 }
 ```
 
+```javascript
+// models/post.js
+module.exports = (sequelize, DataTypes) => {
+  const Post = sequelize.define('Post', { // table name => lowercase + 's' => posts
+    content: {
+      type: DataTypes.TEXT, // 정해진 길이 없는 글
+      allowNull: false,
+    }
+  }, {
+    charset: 'utf8mb4',
+    collate: 'utf8mb4_general_ci',
+  });
 
+  Post.associate = (db) => {
+    // 1:N Child table(Foreign Key 전달 받음 => User테이블에 속해있음.)
+    db.Post.belongsTo(db.User); // User 테이블의 Id 추가해줌(Primary Key만 외래키가 될 수 있음에 주의.)
+  }
+  return Post;
+}
+```
+
+```javascript
+// app.js express 및 sequelize 연결
+const express = require('express');
+const db = require('./models'); // sequelize db
+
+// 리눅스와 맥은 MySQL을 터미널 혹은 GUI에서 따로 실행해주는 것까지 해야 한다.
+db.sequelize.sync(); // db 시작(MySQL). 만약 db 생성을 안한경우, $ npx sequelize db:create 먼저 실행한다.
+// 무언가 꼬여서 안되는 경우 직접 DB를 삭제하고 다시 한다.
+```
+
+##### 1:N과 N:N 관계 설정
+
+
+
+##### 이미지 저장
+
+이미지는 보통 **이미지 서버를 따로 두어 이미지를 저장**하고, **저장된 주소를 DB에 저장**하는 방식을 사용한다. 그 이유는, 이미지는 보통 들어가면 바뀔 일이 거의 없고, 삭제할 일도 거의 없다. 즉, 저장하면 주로 읽기만을 하게 되고 읽을 때 이미지는 용량이 크기 때문에 DB에 직접 저장한 경우 무리가 가는 경우가 잦다. 그래서 보통 이미지를 대용량 파일 스토리지(File Storage, fs)에 넣고 cdn 등을 붙여 캐싱할 수 있게 해준다. 뿐만 아니라, DB 서버가 터질 것을 우려해 서버를 여러 개 만들어 둔다고 가정할 때 서버는 전체DB를 복제하므로  이미지를 DB에 저장해 둔 경우 차지하는 용량이 상당하여 쓸데없이 용량을 낭비할 수 있다.
 
 ##### Row CRUD
 
@@ -2966,7 +3101,9 @@ sequelize에선 테이블 스키마가 업데이트되거나 새로운 컬럼 �
 ```javascript
 // app.js
 const db = require('./models');
+// sequelize 사용
 db.sequelize.sync({ force: true }); // 서버 재시작시 모든 데이터를 지우고 새로 생성
+// 무언가 꼬여서 안되는 경우 직접 DB를 삭제하고 다시 한다.
 ```
 
 하지만, 이미 배포중인 서비스라면 모든 DB를 날릴 수는 없다. 그럴 때 사용하는 것이 마이그레이션이다.
@@ -3087,7 +3224,7 @@ app.options('/login', cors({ origin: 'http://localhost:3000' }));
 app.get('/login', cors({ [options] }), (req, res) => { ... });
 ```
 
-#### Morgan
+#### morgan
 
 요청과 응답에 대한 정보를 기록해준다.
 
@@ -3099,6 +3236,7 @@ app.get('/login', cors({ [options] }), (req, res) => { ... });
 
   ```javascript
   import morgan from 'morgan';
+  // 보통 맨위에 선언한다.
   app.use(morgan([ARGUMENTS]));
   // 인수는 'dev', 'combined', 'short', 'tiny', 'common' 등이 있다.
   ```
@@ -3155,7 +3293,395 @@ app.get('/login', cors({ [options] }), (req, res) => { ... });
 
 #### passport
 
-패스포트는 세션 스토리지 등을 이용하여 인증정보를 저장하거나 사용자 인증 요청을 처리하는 라이브러리이다. 플러그인 형태로 구성되어 있어 특정 로그인 방식에 맞춰 여러 플러그인을 받아 사용할 수 있다.
+패스포트는 세션 스토리지 등을 이용하여 인증정보를 저장하거나 사용자 인증 요청을 처리하는 라이브러리이다. 플러그인 형태로 구성되어 있어 특정 로그인 방식에 맞춰 여러 플러그인을 받아 사용할 수 있다.(passport-kakao 등)
+
+**설치**
+
+```bash
+$ npm install passport passport-local cookie-parser express-session bcrypt
+```
+
+passport는 각 로그인 별 플러그인을 **Strategy**라고 표현하며, 각 전략 별로 플랜을 세워두고, 상황에 맞는 전략을 불러와서 로그인 시도를 하게된다.
+
+**생성**
+
+Root에 `passport/index.js`를 생성한다. passport directory는 필수는 아니지만, 폴더 구조를 명확히 하기 위해 생성하며, `index.js`는 passport 앱을 컨트롤하는 중앙장치라고 생각하면 된다. 
+
+```javascript
+// passport/index.js
+const passport = require('passport');
+
+module.exports = () => {
+  passport.serializeUser(() => {
+    
+  });
+  passport.deserializeUser(() => {
+    
+  });
+};
+```
+
+이후 app.js에 import 후 기본 설정을 한다.
+
+```javascript
+// app.js
+// 미들웨어
+const passport = require('passport');
+// 직접만든 모듈
+const passportConfig = require('./passport');
+// session에 저장 위함
+const session = require('express-session');
+// 쿠키 해석용
+const cookie = require('cookie-parser');
+
+app.use(cookie('cookiesecret'));
+app.use(session({
+  resave: false,
+  saveUninitialized: false,
+  secret: 'cookiesecret', // 세션 쿠키가 암호화되어 있는데, 암호화를 해제할 수 있는 키 역할을 한다.
+  cookie: {
+    maxAge: 600000, // 쿠키 수명 10분
+    secures: true // https 사용
+  }
+}));
+// 실행
+app.use(passport.initialize());
+// 세션 저장 허용
+app.use(passport.session());
+// 직접 만든 패스포트 파일 실행
+passportConfig();
+
+app.use(cors({ origin: 'http://localhost:3000', credentials: true })); // headers에 인증 정보를 패스하기 위한 credentials: true
+```
+
+이후 각 로그인 방식에 맞는 **전략(strategy)**를 생성한다. 예를 들면, 사이트에서 직접 가입 및 로그인을 한다면, passport-local을 이용해서 로그인하는 것이다.
+
+아래의 예제는 로컬 로그인 전략 예제이다.
+
+```javascript
+// passport/local.js
+const passport = require('passport');
+// 비밀번호 암호화
+const bcrypt = require('bcrypt');
+// 로컬 전략 객체
+const { Strategy: LocalStrategy } = require('passport-local');
+// db(MySQL 사용)
+const db = require('../models');
+
+module.exports = () => {
+  passport.use(new LocalStrategy({
+    // body의 property를 넣어줌.
+    usernameField: 'email', // req.body.email을 의미
+    passwordField: 'password', // req.body.password을 의미
+    session: true, // 세션 저장여부
+    // passReqToCallback:false, // express의 req 접근 가능 여부
+  }, async (email, password, done) => { // 위에서 넘겨준 필드가 들어와 있다.
+    try { // 서버 정지 방지 위해 실무에선 try catch가 필수.(async, await 사용시)
+      // 검사
+      // db에서 email있는 지 확인
+      const exUser = await db.User.findOne({
+        where: {
+          email,
+        }
+      });
+  
+      if (!exUser) {
+        // 각 에러, 성공시 반환내용(성공하는 경우 없을 시 false 반환하기), 실패시 반환할 내용 작성
+        return done(null, false, { reason: '존재하지 않는 사용자입니다.' });
+      }
+  		// 비밀번호 비교
+      const result = await bcrypt.compare(password, exUser.password);
+  
+      if (result) {
+        return done(null, exUser);
+      } else {
+        return done(null, false, { reason: '비밀번호가 틀립니다.' });
+      } 
+    } catch (err) {
+      console.error(err);
+      return done(err);
+    }
+  }));
+}
+```
+
+**연결 및 사용**
+
+먼저, `passport/index.js`에서 전략을 연결, 실행한다.
+
+```javascript
+// passport/index.js
+const passport = require('passport');
+const local = require('./local');
+module.exports = () => {
+  passport.serializeUser(() => {
+    
+  });
+  passport.deserializeUser(() => {
+    
+  });
+  
+  // 연결, 실행
+  local();
+};
+```
+
+이제 local을 통해 직접 로그인을 해보자. `app.js`에 관련 내용을 작성할 것이다.
+
+```javascript
+// app.js
+...
+app.post('/user/login', async (req, res, next) => {
+  try {
+    /* 
+    	1. passport.authenticate('local', callback)(req, res, next): localStrategy에 req, res, next를 인수로 전달하여 실행 
+    	2. 실행 후 결과를 strategy의 done() 함수를 통해 (에러, 성공데이터, 실패정보) 세가지를 받아 콜백 함수를 부른다.
+    	3. 단계를 거치며, localStrategy의 실행 결과에 따른 반환값에 맞는 상황을 다시 return한다.
+    	4. 성공한 경우, req.login()을 실행하게 된다.
+    */
+    passport.authenticate('local', (err, user, info) => {
+      // 에러 전송시 에러 처리
+      if (err) {
+        console.error(err);
+        return next(err);
+      }
+      
+      // 실패시 front의 실수이므로 next(err)이 아닌 이유를 send(없는 아이디, 잘못된 비밀번호)
+      if (info) {
+        return res.status(401).json({
+          errorCode: 2,
+          message: info.reason
+        });
+      }
+      
+      // 성공시
+      /*
+      	1. Middleware 조작으로 (app.use(passport.initialize())) req에 login, logout이라는 메서드가 추가됨.
+      	2. login 메서드가 동작할 때 passport/index.js의 serializeUser를 불러 session에 사용자 정보를 저장.
+      	3. session에 [임의의 key]: [serializeUser가 돌려준 done() 성공값을 value]로 저장하고, 이 값을 login함수가 쿠키[connect.sid]:[session key]식으로 넘겨준다.
+      */
+      return req.login(user, (err) => {
+        // 에러가 있는 경우 err에 값이 담겨 오므로, 에러 처리를 해둔다.
+        if (err) {
+          console.error(err);
+          return next(err);
+        }
+        // front로 사용자 정보 res.data로 넘겨주기
+        return res.status(200).json(user);
+      }); // app.use(passport.initialize());에서 추가된 req methods
+    })(req, res, next); // 함수 실행
+    
+  } catch(err) {
+    console.error(err);
+    return next(err);
+  } // catch
+}); // app.post
+```
+
+그러면, 다시 `passport/index.js`로 돌아가 serializeUser와 deserializeUser를 마저 작성하자.
+
+```javascript
+const passport = require('passport');
+const local = require('./local');
+const db = require('../models');
+
+module.exports = () => {
+  /*
+  	1. req.login()에 의해 호출
+  	2. req.login의 첫번째 매개변수가 serializeUser 콜백함수의 첫번째 매개변수로 등록된다.
+  	3-1. 콜백함수의 두번째 매개변수는 done()으로, 첫번째 매개변수가 전달한 값중 세션에 등록할 값을 선택한다.
+  	3-2. 값을 세션(req.session.passport.user)에 저장한다.
+  	4. 여기선 오직 user.id만 등록했는데, user.id는 db내 고유값이라 유저 조회가 용이하고 + 서버의 메모리 부담을 줄이기 위해선 저장 내용을 최대한 줄이는 것이 이득이기 때문이다.
+  */
+  passport.serializeUser((user, done) => {
+    return done(null, user.id);
+  });
+  
+  /*
+  	0. 로그인 후의 모든 요청은 deserializeUser를 거치게 된다.
+  	1. serializeUser의 콜백함수의 반환함수, done()의 두번째 인자였던 user.id가 deserializeUser의 콜백함수의 첫번째 인자로 전달된다.
+  	2. DB에서 받아온 아이디를 통해 유저가 있는 지 확인하고, 해당 유저가 있으면 done()함수에 보내 req.user에 그 정보를 투입하고, req.isAuthenticated() === true로 만든다.
+  */
+  passport.deserializeUser( async (id, done) => {
+    try {
+      // 백엔드는 db접속을 최대한 적게 하는 것이 최우선 과제여서 나중엔 캐싱처리를 해준다.
+      const user = await db.User.findOne({ attributes: ['email', 'nickname'], where: { id: id } });
+      return done(null, user);
+    } catch(err) {
+      console.error(err);
+      return done(err);
+    }
+  });
+  // 로컬전략 연결, 실행
+  local();
+}
+```
+
+로그인을 완료했으면, 이후 사이트 접속시마다 deserializeUser가 작동한다. 이때의 처리는 아래 `프런트엔드에서의 요청`항목을 확인하고, 이제 로그아웃 구현을 알아보자. 로그아웃은 **반드시 콜백함수를 써야함**에 주의하자.
+
+```javascript
+// app.js
+app.post('/logout', (req, res, next) => {
+  if (req.isAuthenticated()) {
+    // req.logout(callbak)은 반드시 콜백함수로 다음 동작을 지정해야 한다.
+    req.logout(function (err) {
+      if (err) {
+        return next(err);
+      }
+      req.session.destroy(); // 세션 없애기, 선택사항
+      return res.status(200).send('로그아웃 되었습니다.');
+    });
+  }
+});
+```
+
+**프런트엔드에서의 요청**
+
+요청을 할 시엔, 암호화된 정보를 전송 및 응답하고 이후 `req.user`에 유저 데이터를 받아오기 위해 반드시 `withCredentials: true` config를 전달해야 한다.(쿠키를 전송하고, 프런트로 쿠키를 내려받기 위함)
+서버 측에선 위에도 설명했지만 `app.use(cors({ origin: 'http://localhost:3000', credentials: true }));`를 반드시 설정해둔다.
+
+1. 로그인을 요청한다.
+   ```javascript
+   // api/index.js
+   import axios from 'axios';
+   
+   const form = {
+     baseUrl: 'URL/',
+   }
+   // withcredentials 항상 true 설정
+   // axios.defaults.withCredentials = true;
+   // 예시
+   /** 
+     axios.get(url, {
+       headers: {},
+       withCredentials: true,
+     });
+   
+     axios.post(url, data: {}, {
+       withCredentials: true,
+     })
+   */
+   async function $_getApi(url, config) {
+     const data = ref(null);
+     const error = ref(null);
+   
+     try {
+       const res = await axios.get(`${form.baseUrl}${url}/`, config);
+       data.value = res.data;
+     } catch (err) {
+       if (process.dev) {
+         console.error(err);
+       }
+       error.value = err;
+     }
+   
+     return { data, error } 
+   }
+   
+   async function $_postApi(url, reqData=null, config=null) {
+     const data = ref(null);
+     const error = ref(null);
+   
+     try {
+       const res = await axios.post(`${form.baseUrl}${url}`, reqData, config);
+       data.value = res.data;
+     } catch (err) {
+       if (process.dev) {
+         console.error(err);
+       }
+       error.value = err?.response?.data ?? { errorCode: 0, message: '서버 상에 문제가 발생했습니다.'};
+     }
+     return { data, error };
+   }
+   
+   export {
+     $_getApi,
+     $_postApi
+   }
+   
+   // stores/users.js
+   import * as api from '@/api';
+   
+   export const useUsersStore = defineStore('users', () => {
+     const state = reactive({
+       me: null,
+     });
+     // 로그인 요청
+     async function login(payload) {
+       const { data, error } = await api.$_postApi('user/login', {
+         email: payload.email,
+         password: payload.password,
+       }, { withCredentials: true }); // withCredentials는 필수이다.
+       if (error.value) {
+         console.error(error.value);
+         alert(error.value);
+       }
+       state.me = {
+         email: data.value.email,
+         nickname: data.value.nickname,
+       };
+       await router.push('/');
+     }
+     
+     return {
+       login,
+     }
+   }
+   ```
+
+2. 서버에서 로그인 요청을 받아 그 로직을 처리한다.(위에 작성해둔, app.post('/user/login')함수를 참조할 것)
+
+3. 로그인 후에는 접속할 때마다 로그인이 되어 있는 지 확인하기 위한 요청을 보낸다.
+   ```javascript
+   // stores/users.js
+   async function onCheckLoggedIn(payload) {
+       try {
+         // withCredentials 필수
+         const { data, error } = await api.$_getApi('user', { withCredentials: true });
+         if (error.value) {
+           console.error(error.value);
+           alert(error.value);
+         }
+         if (data.value) {
+           state.me = {
+             email: data.value.email,
+             nickname: data.value.nickname,
+           }
+           return true;
+         }
+         return false;
+       } catch (err) {
+         console.error(err);
+         return false;
+       }
+     }
+   ```
+
+4. 서버는 요청을 받아 로그인이 되어있는 지 확인해준다.
+   ```javascript
+   app.get('/user', (req, res, next) => {
+     if (req.isAuthenticated()) { // 로그인 정보가 인증되어 있다면
+       // deserializeUser에서 전달받는다.
+       return res.status(200).json(req.user?.dataValues); // dataValues에 유저 정보가 저장되어 있다.
+     }
+     return res.status(204).send();
+   });
+   ```
+
+   
+
+**전체 과정 정리**
+
+1. 프런트에서 로그인 정보를 담아 post요청을 보낸다.
+2. `app.use(express.json())`혹은 `app.use(express.urlencoded({ extended: false }))`가 프런트에서 보낸 정보를 req.body에 담아준다.
+3. `passport.authenticate([STRATEGY], callback)`가 설정한 전략을 실행하고, 해당 전략에서 `req.body`를 전달받아 로그인 정보를 체크해 검사하고, 결과에 맞게 `에러/성공/실패`를 보내준다.
+4. `passport.authentiacte()`의 콜백함수로 돌아와서 보내온 결과가 에러 혹은 실패인 경우 그에 맞는 값을 반환하고, 성공한 경우 `req.login()`함수를 실행한다.
+5. `req.login()` 이 `passport/index.js`의 serializeUser를 불러온다. serializeUser는 값을 세션에 저장하고, req.login()은 프런트엔드에 이를 다시 가공하여 쿠키로 내려보내준다.
+6. 이후 오는 모든 요청에 deserializeUser함수가 동작해서 로그인 여부를 확인해준다.
+
+#### 캐싱처리(redis)
+
+passport 과정에서 session을 저장했던 메모리 방식은 정보가 서버에 들어가기 때문에 서버를 종료하면 정보가 날아가게된다. 그래서 이를 저장할 때는 `redis`라는 별도의 db를 이용한다.
 
 #### 비밀번호 암호화
 
@@ -3184,8 +3710,40 @@ app.post('/user', async (req, res, next) => {
     ...
   }
 });
+  
+```
 
-// 일치 확인
+```javascript
+// 패스워드 일치 확인 예제
+module.exports = () => {
+  passport.use(new LocalStrategy({
+    usernameField: 'email',
+    passwordField: 'password'
+  }, async (email, password, done) => {
+    try { // 서버 정지 방지 위해 실무에선 try catch가 필수.(async, await 사용시)
+      const exUser = await db.User.findOne({
+        where: {
+          email,
+        }
+      });
+  
+      if (!exUser) {
+        return done(null, false, { reason: '존재하지 않는 사용자입니다.' });
+      }
+  		// password 일치 확인
+      const result = await bcrypt.compare(password, exUser.password);
+  
+      if (result) {
+        return done(null, exUser);
+      } else {
+        return done(null, false, { reason: '비밀번호가 틀립니다.' });
+      } 
+    } catch (err) {
+      console.error(err);
+      return done(err);
+    }
+  }));
+}
 ```
 
 
@@ -4266,6 +4824,16 @@ db.[COLLECTION_NAME].[deleteOne, deleteMany, findOneAndDelete, or bulkWrite.]({ 
 
 ## Mac
 
+### Safari
+
+#### 단축키
+
+| 단축키                       | 상세설명                                     |
+| ---------------------------- | -------------------------------------------- |
+| Control + 왼쪽/오른쪽 화살표 | 화면 전환(전체 화면으로 사용중인 앱 있을 때) |
+
+
+
 ### 업데이트 후 터미널 명령어가 안될 때
 
 git 등의 명령어가 실행되지 않을 경우가 있다. 이 때 터미널에 아래를 입력하여 설치해준다.
@@ -4284,6 +4852,8 @@ $ xcode-select --install
 $ /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
 # 환경변수 설정
 $ echo 'eval "$(/opt/homebrew/bin/brew shellenv)"' >> /Users/<USER_ID>/.zprofile # 혹은 [>> ~/.zprofile]
+# zsh 아닌 bash 사용시 환경변수 설정
+$ echo 'eval "$(/opt/homebrew/bin/brew shellenv)"' >> ~/.bash_profile
 # 설정 후 실행
 $ eval "$(/opt/homebrew/bin/brew shellenv)" # 현재 사용중인 쉘에 브루파일 경로 적용
 # 이후 홈브루 사용 예제
@@ -4440,6 +5010,14 @@ vim으로 이동한 후 사용할 수 있는 명령어는 아래와 같다.
 - `esc`: 명령어 모드
   - `:qa` 종료
   - `:wq!`저장 후 종료
+
+
+
+## Pinia
+
+피니아는 이해하기 쉬운 Store를 표방하며 나온 Vuex의 대안책이며 Vue.js 개발자가 공식으로 개발하는 Store입니다.
+
+
 
 ## 추천사이트
 
