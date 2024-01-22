@@ -2551,7 +2551,52 @@ let foo: Array<{ y: string, x: string }> = [{ y: 'abc', x: 'def' }];
 let { y, x } = foo.shift()!; // Error가 사라진다.
 ```
 
+### Vue3 사용시 ref 객체의 타입설정(TS2740)
 
+Vue3에선 반응형을 유지하기 위해 ref를 자주 사용하게 되는데, ref 객체를 선언했을때 타입을 지정하면 이와 같은 에러에 마주하게 된다.
+
+```markdown
+Type 'Ref<never[]>' is missing the following properties from type 'ItemsProps[]': length, pop, push, concat, and 28 more.ts(2740)
+const items: ItemsProps[]
+```
+
+```html
+<script lang="ts">
+	import { ref, onMounted } from 'vue'
+	export default {
+    setup () {
+      const items: Array<ItemsProps> = ref([])
+    onMounted(() => {
+      setTimeout(() => {
+        items.value = [
+          { body: 'Scoped Slots Guide', username: 'Evan You', likes: 20 },
+          { body: 'Vue Tutorial', username: 'Natalia Tepluhina', likes: 10 }
+        ]
+      }, 2000)
+    }
+  }
+	type ItemsProps = {
+  	body: string,
+  	username: string,
+  	likes: number
+	}
+</script>
+```
+
+Ref 는 내가 선언한 변수가 반응성을 유지할 수 있게 해주는데, 위처럼 ref 함수를 사용하는 경우에는 변수에 직접 타입 설정을 하게 되면 ref가 정상적으로 작동하지 않게 된다. 그래서 따로 Ref 타입을 설정해 주어야 한다.
+
+```html
+<script lang="ts">
+	import { ref, type Ref } from 'vue' // type Ref를 불러온다.
+  export default {
+    setup () {
+      const items: Ref<Array<ItemsProps>> = ref([])
+    }
+  }
+</script>
+```
+
+위처럼 작성하게 되면, 정상적으로 작동한다.
 
 ## Node.js
 
@@ -4162,6 +4207,16 @@ npm install은 package_lock.json 파일을 생성하고, package.json 파일을 
 
 npm ci는 **package_lock.json** 파일을 참조하여 패키지를 설치하고 version 매칭에만 package.json을 활용한다. 따라서, `node_modules/`를 사용하지 않는 CI/CD 환경에서는 npm ci가 더 적합하며, 빠른 속도를 기대할 수 있다.
 
+### npm audit fix --force 되돌리기
+
+npm audit fix --force 시에 각 패키지 간에 의존성 문제를 강제로 해결하는데, 이걸 하는 경우 오히려 패키지 간의 의존성에 치명적인 문제가 발생하거나, 프로그램 상에 오류가 발생할 가능성이 있다. 이와 같은 경우를 대비해 **반드시 git에 미리 패키지를 업데이트하고 진행**하거나 npm audit fix --force를 진행하지 않는 것이 좋다. 보통 **npm update --force**를 진행한 경우, 치명적인 의존성 문제는 거의 해결되었을 가능성이 높기 때문이다. 어찌됐건 문제를 해결하는 방법은 아래와 같다.
+```bash
+$ git restore package-lock.json
+$ git restore package.json
+$ npm install
+$ npm update [--force] [--legacy-peer-deps]
+```
+
 ## Vue
 
 ### Re-rendering 방지
@@ -4522,7 +4577,7 @@ $ brew cask install mysqlworkbench # 시각화 도구(콘솔로 진행할 시 �
 ### 실행 및 보안설정
 
 ```bash
-$ brew services [start/restart/stop] mysql # MySQL [시작/재시작/종료]
+$ brew services [start/restart/stop] mysql # MySQL [시작/재시작/종료](백그라운드에서 계속 실행됨에 유의)
 $ brew services list # 서비스 리스트
 $ mysql_secure_installation # root 비밀번호 설정
 ```
