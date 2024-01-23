@@ -649,6 +649,18 @@ body {
 
 
 
+### 특정 요소의 배경색만 투명하게 만들기
+
+```css
+element {
+  background-color: transparent;
+  /* or */
+  background-color: rgba(0,0,0,0);
+}
+```
+
+
+
 ## JavaScript
 
 ### Style Guide
