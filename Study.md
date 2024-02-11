@@ -4907,6 +4907,7 @@ db.[COLLECTION_NAME].[deleteOne, deleteMany, findOneAndDelete, or bulkWrite.]({ 
 | 단축키                       | 상세설명                                     |
 | ---------------------------- | -------------------------------------------- |
 | Control + 왼쪽/오른쪽 화살표 | 화면 전환(전체 화면으로 사용중인 앱 있을 때) |
+| Fn + backspace               | Delete                                       |
 
 
 
