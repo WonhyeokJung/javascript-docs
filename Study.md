@@ -3847,6 +3847,19 @@ git add ./components/ // components 디렉토리 내 전체 디렉토리/파일
 
 `git reset HEAD`
 
+### Git 오래된 커밋 없애기(Git Branch 새로 생성해서 옮기는 방식)
+
+```bash
+git checkout --orphan [TEMP_BRANCH_NAME] # git branch 생성
+git add . # 저장소 add
+git commit -m 'commit message' # commit
+git branch -D [BRANCH_NAME] # old branch 삭제
+git branch -m [BRANCH_NAME] # 새로 생성한 branch name 변경(master등 삭제한 기존 브랜치명)
+git push -f origin [BRANCH_NAME] # force push
+```
+
+
+
 ### Git 초기 생성시 파일을 추가하여(LICENSE, README 등) 에러가 났을 때 대처 방법
 
 ```bash
