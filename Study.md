@@ -3925,11 +3925,13 @@ Settings -> pages에서 deploy 설정을 레포지토리로 한 후, 배포할 i
    module.exports = defineConfig({
      // 아래처럼, 배포 시에는 주소를 다르게 설정해 주어야 하는데,
      // npm run build를 사용시 production 환경에 맞는 주소를 이어붙여서 빌드해 주는데,
-     // 예를 들면 css의 src가 기본은 '/'이다가, 배포시엔 앞에 '/pinia/'를 붙여서 작성해주게 된다.
-     // [GITHUB_ID].github.io/[REPO]에 배포한다고 했을 때, 이 레포명이 없으면 배포 후
-     // css와 js 파일을 찾을 수 없어 하얀 화면을 맞이하게 된다.
+     // 예를 들면 css의 src가 기본은 '/'이다가, 배포시엔 앞에 '/[원하는기본주소]/'를 붙여서 작성해주게 된다.
+     // [GITHUB_ID].github.io/[REPO_NAME]에 배포한다고 했을 때, 이 레포명이 없으면 배포 후
+     // src가 [GITHUB_ID].github.io/[REPO_NAME]/ 경로가 아닌
+     // [GITHUB_ID].github.io/ 경로에서 찾게 되어 css, js 파일을 찾을 수 없기 때문에
+     // 하얀 화면을 맞이하게 된다.
      // 즉, 빌드시엔 레포명을 추가해주어 빌드했기 때문에 정상적으로 css와 js 파일 로드가 가능해진다.
-     publicPath: process.env.NODE_ENV === 'production' ? '/pinia/' : '/',
+     publicPath: process.env.NODE_ENV === 'production' ? '/[REPO_NAME]/' : '/',
      transpileDependencies: true
    })
    ```
