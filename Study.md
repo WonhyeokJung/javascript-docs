@@ -3843,6 +3843,164 @@ git add ./components/ // components 디렉토리 내 전체 디렉토리/파일
 2. `git commit -m 'MESSAGE'`
 3. `git push REMOTE_NAME BRANCH_NAME`
 
+### Github Pages 정적 사이트 배포 예시
+
+#### 기본 방법
+
+Settings -> pages에서 deploy 설정을 레포지토리로 한 후, 배포할 index.html 파일이 있는 repo를 설정해 배포한다.
+이와 같은 경우, 본 페이지는 [USERNAME].github.io / 그 외 레포는 [USERNAME].github.io/[REPO_NAME]으로 배포된다.
+
+#### Github Actions를 이용할 때(Vite 예시)
+
+1. `vite.config.js`의 `base`값을 적절하게 설정한다.
+
+   커스텀 도메인 혹은 메인페이지(`[USERNAME].github.io`)에 배포시, `base`설정을 하지 않거나, `'/'`로 하면 된다.
+
+   그 외 레포(`[USERNAME].github.io/[REPO_NAME]`)의 경우 `base`설정값을 `'/[REPO_NAME]/'`으로 지정한다.
+
+2. github repo에서 settings - pages 설정으로 이동 후, 배포 방식을 `Github Actions`로 지정 후(혹은 github에서 추천 옵션으로 제공하는 `static HTML`을 선택하면 아래처럼 직접 작성이 아닌 몇가지 완성된 로직을 제공한다. 내 빌드환경과 일치하는지 확인 필수) 아래와 같이 설정한다.
+
+   아래 설정은 npm을 이용한 기본 예시임에 주의하자.
+
+   ```bash
+   # Simple workflow for deploying static content to GitHub Pages
+   name: Deploy static content to Pages
+   
+   on:
+     # Runs on pushes targeting the default branch
+     push:
+       branches: ['master']
+   
+     # Allows you to run this workflow manually from the Actions tab
+     workflow_dispatch:
+   
+   # Sets the GITHUB_TOKEN permissions to allow deployment to GitHub Pages
+   permissions:
+     contents: read
+     pages: write
+     id-token: write
+   
+   # Allow one concurrent deployment
+   concurrency:
+     group: 'pages'
+     cancel-in-progress: true
+   
+   jobs:
+     # Single deploy job since we're just deploying
+     deploy:
+       environment:
+         name: github-pages
+         url: ${{ steps.deployment.outputs.page_url }}
+       runs-on: ubuntu-latest
+       steps:
+         - name: Checkout
+           uses: actions/checkout@v4
+         - name: Set up Node
+           uses: actions/setup-node@v3
+           with:
+             node-version: 18
+             cache: 'npm'
+         - name: Install dependencies
+           run: npm install
+         - name: Build
+           run: npm run build
+         - name: Setup Pages
+           uses: actions/configure-pages@v3
+         - name: Upload artifact
+           uses: actions/upload-pages-artifact@v2
+           with:
+             # Upload dist repository
+             path: './dist'
+         - name: Deploy to GitHub Pages
+           id: deployment
+           uses: actions/deploy-pages@v2
+   ```
+
+#### Vue 예시
+
+1. `vue.config.js`에서 `publicPath`혹은`baseUrl(구버젼)`을 설정하는데, **vite**와는 **다른 점**이 있다.
+
+   ```javascript
+   const { defineConfig } = require('@vue/cli-service')
+   module.exports = defineConfig({
+     // 아래처럼, 배포 시에는 주소를 다르게 설정해 주어야 하는데,
+     // npm run build를 사용시 production 환경에 맞는 주소를 이어붙여서 빌드해 주는데,
+     // 예를 들면 css의 src가 기본은 '/'이다가, 배포시엔 앞에 '/pinia/'를 붙여서 작성해주게 된다.
+     // [GITHUB_ID].github.io/[REPO]에 배포한다고 했을 때, 이 레포명이 없으면 배포 후
+     // css와 js 파일을 찾을 수 없어 하얀 화면을 맞이하게 된다.
+     // 즉, 빌드시엔 레포명을 추가해주어 빌드했기 때문에 정상적으로 css와 js 파일 로드가 가능해진다.
+     publicPath: process.env.NODE_ENV === 'production' ? '/pinia/' : '/',
+     transpileDependencies: true
+   })
+   ```
+
+2. 설정에서 Pages -> Github Actions를 설정해준다. 설정에 들어가면 `staticHTML` 옵션을 기본적으로 제공해주는데, 이를 사용해서 `path`만 변경해줘도 된다.
+
+   ```bash
+   # Simple workflow for deploying static content to GitHub Pages
+   name: Deploy static content to Pages
+   
+   on:
+     # Runs on pushes targeting the default branch
+     push:
+     	# 사용하는 branch명
+       branches: ["master"]
+   
+     # Allows you to run this workflow manually from the Actions tab
+     workflow_dispatch:
+   
+   # Sets permissions of the GITHUB_TOKEN to allow deployment to GitHub Pages
+   permissions:
+     contents: read
+     pages: write
+     id-token: write
+   
+   # Allow only one concurrent deployment, skipping runs queued between the run in-progress and latest queued.
+   # However, do NOT cancel in-progress runs as we want to allow these production deployments to complete.
+   concurrency:
+     group: "pages"
+     # 중복 배포 등을 피하려면 true로 하면된다.
+     cancel-in-progress: false
+   
+   jobs:
+     # Single deploy job since we're just deploying
+     deploy:
+       environment:
+         name: github-pages
+         url: ${{ steps.deployment.outputs.page_url }}
+       runs-on: ubuntu-latest
+       steps:
+         - name: Checkout
+           uses: actions/checkout@v4
+         - name: Setup Pages
+           uses: actions/configure-pages@v4
+           # 설정한 폴더 내의 내용을 하나의 압축파일로 만든다. 이를 이용해 배포속도를 높인듯?
+         - name: Upload artifact
+           uses: actions/upload-pages-artifact@v3
+           with:
+           	# vue의 경우 파일이 root/dist 폴더에 배포되어 root/dist 폴더로 설정했지만, 
+           	# 개발환경에 맞게 변경해서 사용하면 된다.
+             path: '${{ github.workspace }}/dist/'
+         	# artifact 압축 파일을 전달받아 배포한다.
+         - name: Deploy to GitHub Pages
+           id: deployment
+           uses: actions/deploy-pages@v4
+
+#### Netlify CLI 예시
+
+```bash
+# Install the Netlify CLI
+$ npm install -g netlify-cli
+
+# Create a new site in Netlify
+$ ntl init
+
+# Deploy to a unique preview URL
+$ ntl deploy
+```
+
+
+
 ### Git Add를 취소할 때
 
 `git reset HEAD`
