@@ -528,6 +528,23 @@ div {
 }
 ```
 
+### 좌우정렬
+
+```html
+<!-- 방법1 grid -->
+<div style="display: grid; grid-template-columns: 100px 100px; justify-content: space-between;">
+  <div style="margin: 0;">안녕</div>
+  <div>하세요</div>
+</div>
+<!-- 방법2 float left/right -->
+<div>
+  <h1 style="float: left; margin: 0;">Go Sox</h1>
+  <p style="display: inline-block; float: right">Chicago White Sox fan page</p>
+</div>
+```
+
+
+
 ### @media query의 선언 방법
 
 미디어 쿼리는 디바이스 / 화면 크기 등에 따라 여러 가지 옵션을 줄 수 있는 등 CSS에서 자주 사용하는 요소이나 CSS에서 적용 순서 등에 민감하게 반응하여 제대로 적용되지 않는 경우가 잦다. 그를 대비해서 적용 순서/방법을 기재하고자 한다.
