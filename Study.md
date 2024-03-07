@@ -528,7 +528,7 @@ div {
 }
 ```
 
-### 좌우정렬
+### 좌우 끝 정렬
 
 ```html
 <!-- 방법1 grid -->
@@ -541,6 +541,30 @@ div {
   <h1 style="float: left; margin: 0;">Go Sox</h1>
   <p style="display: inline-block; float: right">Chicago White Sox fan page</p>
 </div>
+<!-- 방법3 flex -->
+<head>
+  <style>
+  .flex-wrapper {
+    display: flex;
+    margin: 0 auto;
+    /** height 필수 / width는 크기 조절용 **/
+    width: 960px; 
+    height: 100px;
+    flex-wrap: nowrap;
+    /** 가로, 세로 정렬. align-items는 높이가 없으면 적용이 안되므로 상위 컨텐츠 100% 크기 들어가도록 조정 **/
+    justify-content: space-between;
+    align-items: center;
+  }
+  </style>
+</head>
+<body>
+	<header class="site-header">
+  	<div class="container flex-wrapper">
+    	<a class="site-title">Go Sox</a>
+    	<p style="color: white;">Chicago White Sox fan page</p>
+  	</div>
+	</header>
+</body>
 ```
 
 
