@@ -3939,23 +3939,236 @@ Settings -> pages에서 deploy 설정을 레포지토리로 한 후, 배포할 i
          - name: Set up Node
            uses: actions/setup-node@v3
            with:
-             node-version: 18
+             node-version: 20
              cache: 'npm'
          - name: Install dependencies
            run: npm install
          - name: Build
            run: npm run build
          - name: Setup Pages
-           uses: actions/configure-pages@v3
+           uses: actions/configure-pages@v5
          - name: Upload artifact
-           uses: actions/upload-pages-artifact@v2
+           uses: actions/upload-pages-artifact@v3
            with:
              # Upload dist repository
              path: './dist'
          - name: Deploy to GitHub Pages
            id: deployment
-           uses: actions/deploy-pages@v2
+           uses: actions/deploy-pages@v4
    ```
+
+3. `npm run build`는 Vite 상에서 기본적으로 `/dist`디렉토리에 배포 파일을 생성하는데, **github actions**를 통해 build를 하는 경우, 파일 경로가 전부 기본적으로 `/dist/`로 형성된다.
+
+   ```html
+   <!doctype html>
+   <html lang="en">
+     <head>
+       <meta charset="UTF-8" />
+    		<!-- REPO명은 go-sox지만, 전부 /dist/로 주소가 형성되었다. -->   
+       <link rel="icon" type="image/svg+xml" href="/dist/assets/go-sox-logo-CPUPgZ4t.png" />
+       <meta name="viewport" content="width=device-width, initial-scale=1" />
+       <title>Go Sox</title>
+       <script type="module" crossorigin src="/dist/assets/index-BovFBprn.js"></script>
+       <link rel="stylesheet" crossorigin href="/dist/assets/index-BaNrfgD2.css">
+     </head>
+     <body>
+       <div id="app"></div>
+     </body>
+   </html>
+   ```
+
+4. 위 예시에서 이제 문제가 발생하는데, **github pages**는 주소를 `[USER_ID].github.io/[REPO_NAME]`으로 형성하는데, 위 href에선 `/dist/`로 형성되어 있어 REPO명이 아닌 dist 주소를 통해 불러오려고 해, **js/css 파일을 불러올 수 없다.**
+   (정상적으로 불러올 수 있는 주소 예시는 `https://[USER_ID].github.io/[REPO_NAME]/[JS_FILE_NAME].js`와 같다.)
+
+5. Github Actions는 일단 `.env`파일을 Branch에 올려도 **인식하지 못하며**, 그 이전에 보안상 .env 파일을 올리는 경우는 흔치 않다. 따라서 이를 해결해야 하는데, 이를 해결하는 방법에는 두가지가 있다.
+
+   1. 로컬에서 배포 파일을 빌드 후, 빌드한 배포 파일을 배포하기
+   2. Github Repo에서 Secret 키 형성 후 이를 사용해 Github Actions로 배포하기
+
+
+##### 로컬에서 빌드 후, 빌드한 파일을 repo에 올려서 gh-pages에 배포하기
+
+1. 개발 환경에서의 환경 변수와 배포 환경에서의 환경 변수를 구분하기 위해 `.env`파일 생성하기
+   ```json
+   // .env.production
+   // 배포 환경에서의 기본 주소
+   VITE_ASSET_PATH='/go-sox/'
+   
+   // .env.development
+   // 개발 환경에서의 기본 주소
+   VITE_ASSET_PATH='/'
+   ```
+
+2. 배포 파일의 `css, js`파일의 기본 경로 설정을 위해 `base`  키 설정하기
+   ```typescript
+   // vite.config.ts
+   import { fileURLToPath, URL } from 'node:url'
+   
+   import { defineConfig, loadEnv } from 'vite'
+   import vue from '@vitejs/plugin-vue'
+   
+   // https://vitejs.dev/config/
+   export default defineConfig(({ command, mode }) => {
+     const env = loadEnv(mode, process.cwd(), '')
+     return {
+       // mode에 따른 기본 route 변경(mode는 const env 통해 현재 모드를 읽어오게 된다. config 외부에선 import.meta.env로 확인 가능)
+       base: env.VITE_ASSET_PATH,
+       // webpack에서 지원하는 alias 기능.
+       // @로 root directory 가리키게 설정. tsconfig.json에도 설정해야 vscode에서 @/ 인식함.
+       plugins: [vue()],
+       resolve: {
+         alias: [
+           { find:'@', replacement: fileURLToPath(new URL('./src', import.meta.url))},
+           // asset directory 가리키기.
+           { find:'@assets', replacement: fileURLToPath(new URL('./src/assets', import.meta.url)) }
+         ]
+       },
+     }
+   })
+   
+   ```
+
+3. dist 파일을 함께 github에 업로드한다.
+   ```bash
+   cd dist/ # 빌드 형성된 폴더로 이동
+   git add . -f # dist가 .gitignore에 있으면 force 필수
+   git commit -m ''
+   git push <remote> <branch>
+   ```
+
+4. Github Actions를 아래와 같이 설정한다.(기본 workflow에서 **build**를 제거함. 이미 로컬에서 build해서 올렸기 때문)
+   ```yaml
+   # Simple workflow for deploying static content to GitHub Pages
+   name: Deploy static content to Pages
+   
+   on:
+     # Runs on pushes targeting the default branch
+     push:
+       branches: ['master']
+   
+     # Allows you to run this workflow manually from the Actions tab
+     workflow_dispatch:
+   
+   # Sets the GITHUB_TOKEN permissions to allow deployment to GitHub Pages
+   permissions:
+     contents: read
+     pages: write
+     id-token: write
+   
+   # Allow one concurrent deployment
+   concurrency:
+     group: 'pages'
+     cancel-in-progress: true
+   
+   jobs:
+     # Single deploy job since we're just deploying
+     deploy:
+       environment:
+         name: github-pages
+         url: ${{ steps.deployment.outputs.page_url }}
+       runs-on: ubuntu-latest
+       steps:
+         - name: Checkout
+           uses: actions/checkout@v4
+         - name: Set up Node
+           uses: actions/setup-node@v3
+           with:
+             node-version: 20
+             cache: 'npm'
+         - name: Install dependencies
+           run: npm install
+         - name: Setup Pages
+           uses: actions/configure-pages@v5
+         - name: Upload artifact
+           uses: actions/upload-pages-artifact@v3
+           with:
+             # Upload dist repository
+             path: '${{ github.workspace }}/dist/'
+         - name: Deploy to GitHub Pages
+           id: deployment
+           uses: actions/deploy-pages@v4
+   ```
+
+   
+
+##### Secret 키 형성으로 env 환경 변수 사용해서 배포하기
+
+1. 배포 파일을 따로 build하지 않은 채로 일반적으로 repo에 업로드한다.
+
+2. github REPO 페이지에서 `settings - security - secrets and variables - actions`로 이동해서, `New repository secret`을 클릭해 새 비밀을 생성한다.
+   Name은 **VITE_KEY_NAME**(VITE이므로, VITE로 시작. 개발 환경에 맞게 수정할 것), Secret은 Value를 작성하되, `''`는 작성할 필요없다.
+
+   ```json
+   // 예시
+   Name
+   VITE_ASSET_PATH
+   Secret
+   /[REPO_NAME]/
+   // repo명이 go-sox인 경우
+   /go-sox/ O
+   '/go-sox' X
+   ```
+
+3. 다음과 같이 시크릿을 적용해서 env를 불러오기 때문에 workflow에서 빌드가 가능해서 빌드 파일을 repo에 올릴 필요가 없다.
+   ```yaml
+   # Simple workflow for deploying static content to GitHub Pages
+   name: Deploy static content to Pages
+   
+   on:
+     # Runs on pushes targeting the default branch
+     push:
+       branches: ['master']
+   
+     # Allows you to run this workflow manually from the Actions tab
+     workflow_dispatch:
+   
+   # Sets the GITHUB_TOKEN permissions to allow deployment to GitHub Pages
+   permissions:
+     contents: read
+     pages: write
+     id-token: write
+   
+   # Allow one concurrent deployment
+   concurrency:
+     group: 'pages'
+     cancel-in-progress: true
+   
+   jobs:
+     # Single deploy job since we're just deploying
+     deploy:
+       environment:
+         name: github-pages
+         url: ${{ steps.deployment.outputs.page_url }}
+       runs-on: ubuntu-latest
+       steps:
+         - name: Checkout
+           uses: actions/checkout@v4
+         - name: Set up Node
+           uses: actions/setup-node@v3
+           with:
+             node-version: 20
+             cache: 'npm'
+             
+         - name: Install dependencies
+           run: npm install
+         - name: Build
+           run: npm run build
+           # 환경 변수 사용
+           env:
+             VITE_ASSET_PATH: ${{ secrets.VITE_ASSET_PATH }}
+         - name: Setup Pages
+           uses: actions/configure-pages@v5
+         - name: Upload artifact
+           uses: actions/upload-pages-artifact@v3
+           with:
+             # Upload dist repository
+             path: '${{ github.workspace }}/dist/'
+         - name: Deploy to GitHub Pages
+           id: deployment
+           uses: actions/deploy-pages@v4
+   ```
+
+   
 
 #### Vue 예시
 
@@ -5352,7 +5565,9 @@ app.mount('#app')
 
 
 
+## .gitignore 적용 안될때
 
+이미 ignore할 파일이 올라가 있는데 .gitignore에 새로 추가하는 경우 파일이 계속 올라가게 된다. 파일을 삭제 후 commit 한 후, 이후에 다시 파일을 추가해서 commit하면 적용되게 바뀐다.
 
 ## 추천사이트
 
