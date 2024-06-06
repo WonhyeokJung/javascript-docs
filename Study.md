@@ -5565,6 +5565,74 @@ app.mount('#app')
 
 
 
+## Vite
+
+https://vite-pwa-org.netlify.app/guide/
+
+### Vite + Vue에 이미지 등 캐싱 적용하기
+
+1. 다운로드
+   ```bash
+   npm create @vite-pwa/pwa@latest
+   ```
+
+2. 서비스 워커 등록
+   ```typescript
+   // vite.config.ts
+   import { VitePWA } from 'vite-plugin-pwa'
+   
+   export default defineConfig({
+     plugins: [
+       VitePWA({
+         injectRegister: 'auto',
+         registerType: 'autoUpdate',
+         workbox: {
+           globPatterns: ['**/*.{js,css,html,ico,png,svg}']
+         }
+       })
+     ]
+   })
+   ```
+
+3. 원하는 파일 설정해서 할 때
+   ```typescript
+   import { fileURLToPath } from 'node:url'
+   import { defineConfig, loadEnv } from 'vite'
+   import { VitePWA } from 'vite-plugin-pwa'
+   import vue from '@vitejs/plugin-vue'
+   
+   // https://vitejs.dev/config/
+   export default defineConfig(({ command, mode }) => {
+     const env = loadEnv(mode, process.cwd(), '')
+     return {
+       base: env.VITE_ASSET_PATH,
+       plugins: [
+         vue(),
+         VitePWA({ 
+           registerType: 'autoUpdate',
+           injectRegister: 'auto',
+           workbox: {
+             // 이용자에게 캐시로 강제할 것.
+             globPatterns: ['**/*.{js,css,ico,png,svg,jpg,jpeg}'],
+             // index.html pattern에 없으면 에러 발생하는데, 그것 방지용
+             navigateFallback: null,
+           },
+         })
+       ],
+       resolve: {
+         alias: [
+           { find:'@', replacement: fileURLToPath(new URL('./src', import.meta.url))},
+           // asset directory 가리키기.
+           { find:'@assets', replacement: fileURLToPath(new URL('./src/assets', import.meta.url)) }
+         ]
+       },
+     }
+   })
+   
+   ```
+
+   
+
 ## .gitignore 적용 안될때
 
 이미 ignore할 파일이 올라가 있는데 .gitignore에 새로 추가하는 경우 파일이 계속 올라가게 된다. 파일을 삭제 후 commit 한 후, 이후에 다시 파일을 추가해서 commit하면 적용되게 바뀐다.
