@@ -4667,6 +4667,10 @@ $ npm update [--force] [--legacy-peer-deps]
 
 ## Vue
 
+### Provide / Inject
+
+
+
 ### Re-rendering 방지
 
 ```vue
