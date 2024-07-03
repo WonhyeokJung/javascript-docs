@@ -4667,6 +4667,34 @@ $ npm update [--force] [--legacy-peer-deps]
 
 ## Vue
 
+### Vue3 Computed에 Parameter 투입하기
+
+**고차함수(higher-order function)**, 즉 함수로 함수를 리턴하는 구조를 사용한다.
+
+```vue
+<script setup lang="ts">
+  const arr = [
+    {
+      a: 'b',
+      b: 'c'
+    },
+    {
+      b: 'c',
+      c: 'd'
+    }
+  ]
+  // 일종의 이중함수처럼 형성된다
+	const something = computed(() => (Param:string) => arr.filter((obj) => obj[Param]).length)
+</script>
+<template>
+	<div>
+    {{ soemthing('a') }}
+  </div>
+</template>
+```
+
+
+
 ### Provide / Inject
 
 
@@ -5635,7 +5663,8 @@ https://vite-pwa-org.netlify.app/guide/
    
    ```
 
-   
+
+
 
 ## .gitignore 적용 안될때
 
